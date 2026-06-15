@@ -8,7 +8,6 @@ import { STUB_STAFF } from "@/lib/staff-session";
 import type { StaffRole } from "@/lib/rbac";
 import type { AdminUserSummary } from "@/lib/mock/users";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { PreProductionBanner } from "@/features/dashboard/PreProductionBanner";
 
 import { PreviewRoleProvider } from "@/features/users/roleContext";
 import { RolePreview } from "@/features/users/RolePreview";
@@ -91,8 +90,6 @@ export function UsersScreen() {
             Search-first, field-minimised support view. Synthetic data.
           </p>
         </header>
-
-        <PreProductionBanner />
 
         <RolePreview role={previewRole} onRoleChange={setPreviewRole} />
 

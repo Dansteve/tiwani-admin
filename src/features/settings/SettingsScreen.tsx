@@ -13,7 +13,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
-import { PreProductionBanner } from "@/features/dashboard/PreProductionBanner";
 import { STUB_STAFF, type StaffSession } from "@/lib/staff-session";
 import { AccountCard } from "@/features/settings/AccountCard";
 import { StaffListCard } from "@/features/settings/StaffListCard";
@@ -33,8 +32,6 @@ export function SettingsScreen({ session = STUB_STAFF }: { session?: StaffSessio
           review only.
         </p>
       </header>
-
-      <PreProductionBanner />
 
       {/* Appearance: the real, built theme selector. */}
       <Card>

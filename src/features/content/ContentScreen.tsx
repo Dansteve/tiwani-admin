@@ -1,12 +1,13 @@
 "use client";
 
 // The Content module screen: the board-ready managed-content surface. A header with a "New content" CTA
-// (the coral accent, used sparingly), the pre-production banner, and two tabs: Content (the managed
-// platform-content list) and Waitlist (the E1 lowest-sensitivity operational view). It reads through the
-// adminApi seam via TanStack Query (mock today; an audited admin-api tomorrow, only the client body
-// changes). WRITES are gated on the RBAC scaffold: can(role, "content.write") shows the create / edit /
-// publish controls, otherwise the list renders read-only with a calm note (the stub role is role_admin,
-// which has the grant, so the demo shows the full write surface).
+// (the coral accent, used sparingly) and two tabs: Content (the managed platform-content list) and
+// Waitlist (the E1 lowest-sensitivity operational view). The data-source banner is in the (admin) layout,
+// so it is not repeated here. It reads through the adminApi seam via TanStack Query (mock today; an
+// audited admin-api tomorrow, only the client body changes). WRITES are gated on the RBAC scaffold:
+// can(role, "content.write") shows the create / edit / publish controls, otherwise the list renders
+// read-only with a calm note (the stub role is role_admin, which has the grant, so the demo shows the
+// full write surface).
 //
 // The role comes from the stub staff session (STUB_STAFF, the same pattern the Settings screen uses);
 // it is the affordance decision only, never the security boundary (real enforcement is server-side in the
@@ -24,7 +25,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { TabsList, TabPanel } from "@/components/ui/tabs";
-import { PreProductionBanner } from "@/features/dashboard/PreProductionBanner";
 import { ContentTable } from "@/features/content/ContentTable";
 import { WaitlistPanel } from "@/features/content/WaitlistPanel";
 
@@ -68,8 +68,6 @@ export function ContentScreen({ role = STUB_STAFF.role }: { role?: StaffRole }) 
           </Link>
         ) : null}
       </header>
-
-      <PreProductionBanner />
 
       {!canWriteContent ? (
         <Alert>

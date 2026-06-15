@@ -1,18 +1,23 @@
 // =============================================================================================
-// THE ADMIN-API SEAM (STUB). This is the single typed client to the future tiwani-admin-api (D16).
+// THE ADMIN-API SEAM. This is the single typed client to the future tiwani-admin-api (D16).
 //
-// Today it DELEGATES every read to the clearly-labeled MOCK adapters (src/lib/mock/*). There is NO
-// network call, NO real data, NO service-role key (that credential lives ONLY in the admin-api process,
-// never in this frontend). NEXT_PUBLIC_ADMIN_API_URL is unset in dev, so `isAdminApiConfigured()` is
-// false and the client stays on the mocks.
+// It reads a DATA-SOURCE MODE (lib/admin-api/mode.ts), flipped at runtime by the demo toggle:
+//   - "mock" (the DEFAULT): every read DELEGATES to the clearly-labeled MOCK adapters (src/lib/mock/*).
+//     NO network call, NO real data, NO service-role key (that credential lives ONLY in the admin-api
+//     process, never in this frontend).
+//   - "live": each read issues a `fetch` against NEXT_PUBLIC_ADMIN_API_URL via liveGet() below. The
+//     admin-api only carries /health today (the data endpoints are not built yet), so a live read of a
+//     data endpoint 404s: liveGet throws LiveEndpointUnavailableError, which the screens turn into a clean
+//     empty state + a "this endpoint is not available yet" toast. If the URL is unset, liveGet throws a
+//     clear "Live API not configured" error. The toggle is gated (roles.manage) so only a high role can
+//     switch to live; nothing real is exposed (D16 still hard-gates real data behind the launch gates).
 //
-// WHERE THE REAL SERVICE PLUGS IN: when the audited tiwani-admin-api exists, each method below stops
-// returning the mock and instead issues a request to NEXT_PUBLIC_ADMIN_API_URL, carrying the staff
-// session, hitting a narrow, default-deny, reason-required, audit-logged RPC (every privileged read is a
-// named, logged operation; no raw service-role table access). The method SIGNATURES are the contract the
-// rest of the app codes against, so swapping the body from "return the mock" to "fetch the audited
-// endpoint" does not ripple into the screens. Until then this is the one place the mock seam lives, so
-// there is no second data path scattered through the UI.
+// The branch is a REUSABLE wrapper, seam(mockFn, path): every read method is one line, so a new method
+// (e.g. the blog dev's) adopts the same mock/live behaviour by wrapping its mock call the same way. The
+// method SIGNATURES are the contract the rest of the app codes against, so swapping the live body from a
+// 404 to the audited endpoint later does not ripple into the screens. This is the one place the data seam
+// lives, so there is no second data path scattered through the UI. Writes stay mock-only here (a live,
+// audited, reason-required WRITE is a post-D16 admin-api concern).
 // =============================================================================================
 
 import {
@@ -52,6 +57,7 @@ import {
   type WaitlistEntry,
 } from "@/lib/mock/waitlist";
 import { getMockStaff, type StaffMember } from "@/lib/mock/staff";
+import { getDataMode } from "@/lib/admin-api/mode";
 
 /**
  * A privileged-read audit event. In the real admin-api EVERY privileged read writes one of these to the
@@ -80,83 +86,122 @@ export function isAdminApiConfigured(): boolean {
 }
 
 /**
+ * Raised by liveGet when a live read reaches the admin-api but the endpoint is not available (the
+ * admin-api carries only /health today, so the data endpoints 404). The screens catch it (by name) and
+ * render a clean empty state plus a "this endpoint is not available yet" toast, rather than crashing. A
+ * named class so callers can distinguish "not built yet" from a genuine network failure.
+ */
+export class LiveEndpointUnavailableError extends Error {
+  constructor(
+    public readonly path: string,
+    public readonly status: number,
+  ) {
+    super(`Live API: ${path} is not available yet (status ${status}).`);
+    this.name = "LiveEndpointUnavailableError";
+  }
+}
+
+/**
+ * A single GET against the live admin-api. Throws a clear error if the URL is unset (so the toggle's
+ * "live" state fails loudly rather than silently doing nothing), and a LiveEndpointUnavailableError on any
+ * non-ok response (the data endpoints are not built yet). Returns the parsed JSON body on success. This is
+ * the one network primitive; every live read goes through it.
+ */
+export async function liveGet<T>(path: string): Promise<T> {
+  if (!isAdminApiConfigured()) {
+    throw new Error("Live API not configured (NEXT_PUBLIC_ADMIN_API_URL is unset).");
+  }
+  const base = ADMIN_API_URL.trim().replace(/\/+$/, "");
+  const response = await fetch(`${base}${path}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    throw new LiveEndpointUnavailableError(path, response.status);
+  }
+  return (await response.json()) as T;
+}
+
+/**
+ * The reusable mock/live branch. In "mock" mode (the default) it runs the mock function; in "live" mode
+ * it GETs the path from the admin-api. Every read method below is a one-line `seam(...)`, so a new method
+ * adopts the same behaviour by wrapping its mock call the same way (a trivial, copy-paste-safe pattern).
+ */
+function seam<T>(mockFn: () => T | Promise<T>, path: string): Promise<T> {
+  if (getDataMode() === "live") {
+    return liveGet<T>(path);
+  }
+  return Promise.resolve(mockFn());
+}
+
+/**
  * The typed admin-api client. Each method is async (it WILL be a network call against the audited
  * admin-api) but currently resolves the mock synchronously. The async shape means the screens already
  * `await` it, so no call site changes when the real service lands.
  */
 export const adminApi = {
-  /** The dashboard KPI row. Mock today; an aggregate, non-identifying reporting RPC tomorrow. */
+  /** The dashboard KPI row. Mock (default) or a live GET; an aggregate, non-identifying reporting RPC. */
   async getMetrics(): Promise<AdminMetric[]> {
-    // SEAM: replace with `await this.#get<AdminMetric[]>("/reporting/metrics")` against the admin-api.
-    return getMockMetrics();
+    return seam(() => getMockMetrics(), "/reporting/metrics");
   },
 
-  /** The dashboard activity feed. Mock today; a minimised, audit-logged feed tomorrow. */
+  /** The dashboard activity feed. Mock (default) or a live GET; a minimised, audit-logged feed. */
   async getActivity(): Promise<ActivityItem[]> {
-    // SEAM: replace with `await this.#get<ActivityItem[]>("/reporting/activity")`.
-    return getMockActivity();
+    return seam(() => getMockActivity(), "/reporting/activity");
   },
 
   /**
-   * The aggregate signup-trend series for the dashboard chart (counts per week). Mock today; an
-   * aggregate, non-identifying reporting RPC tomorrow. Aggregate-only by design: it returns counts,
-   * never identities (the dashboard is aggregate-only, README red line 9).
+   * The aggregate signup-trend series for the dashboard chart (counts per week). Mock (default) or a live
+   * GET. Aggregate-only by design: it returns counts, never identities (the dashboard is aggregate-only,
+   * README red line 9).
    */
   async getSignupTrend(): Promise<TrendPoint[]> {
-    // SEAM: replace with `await this.#get<TrendPoint[]>("/reporting/signup-trend")`.
-    return getMockSignupTrend();
+    return seam(() => getMockSignupTrend(), "/reporting/signup-trend");
   },
 
   /**
-   * The aggregate plan-tier distribution for the reporting chart (a count per tier). Mock today; an
-   * aggregate, non-identifying reporting RPC tomorrow. Aggregate-only: a count per bucket, never an
-   * account (reporting is aggregate-only, README red line 9).
+   * The aggregate plan-tier distribution for the reporting chart (a count per tier). Mock (default) or a
+   * live GET. Aggregate-only: a count per bucket, never an account (reporting is aggregate-only, README
+   * red line 9).
    */
   async getPlanDistribution(): Promise<PlanDistributionPoint[]> {
-    // SEAM: replace with `await this.#get<PlanDistributionPoint[]>("/reporting/plan-distribution")`.
-    return getMockPlanDistribution();
+    return seam(() => getMockPlanDistribution(), "/reporting/plan-distribution");
   },
 
   /**
-   * The aggregate content-by-type counts for the reporting chart (a count per content type). Mock today;
-   * an aggregate reporting RPC tomorrow. Aggregate-only: a count per type, never a content row.
+   * The aggregate content-by-type counts for the reporting chart (a count per content type). Mock
+   * (default) or a live GET. Aggregate-only: a count per type, never a content row.
    */
   async getContentCounts(): Promise<ContentTypeCount[]> {
-    // SEAM: replace with `await this.#get<ContentTypeCount[]>("/reporting/content-counts")`.
-    return getMockContentCounts();
+    return seam(() => getMockContentCounts(), "/reporting/content-counts");
   },
 
   /**
-   * The aggregate active-users series for the reporting chart (a count per week). Mock today; an
-   * aggregate, non-identifying reporting RPC tomorrow. Aggregate-only: a count per week, never an identity.
+   * The aggregate active-users series for the reporting chart (a count per week). Mock (default) or a live
+   * GET. Aggregate-only: a count per week, never an identity.
    */
   async getActiveUsersTrend(): Promise<ActiveUsersPoint[]> {
-    // SEAM: replace with `await this.#get<ActiveUsersPoint[]>("/reporting/active-users")`.
-    return getMockActiveUsersTrend();
+    return seam(() => getMockActiveUsersTrend(), "/reporting/active-users");
   },
 
   /**
-   * The staff list for Settings (read-only). Mock today; a role-administration RPC tomorrow (staff.manage
-   * gated, audit-logged). Carries no family-user data: these are staff members, not Coordinators.
+   * The staff list for Settings (read-only). Mock (default) or a live GET (staff.manage gated,
+   * audit-logged). Carries no family-user data: these are staff members, not Coordinators.
    */
   async getStaff(): Promise<StaffMember[]> {
-    // SEAM: replace with `await this.#get<StaffMember[]>("/staff")` (staff.manage gated, logged).
-    return getMockStaff();
+    return seam(() => getMockStaff(), "/staff");
   },
 
-  /** The field-minimised Coordinator list (the E2 support view). Mock today. */
+  /** The field-minimised Coordinator list (the E2 support view). Mock (default) or a live GET. */
   async getUsers(): Promise<AdminUserSummary[]> {
-    // SEAM: replace with `await this.#get<AdminUserSummary[]>("/users")` (reason-required, logged).
-    return getMockUsers();
+    return seam(() => getMockUsers(), "/users");
   },
 
   /**
    * A single Coordinator's MINIMISED detail (the default detail surface, NOT the sensitive record). Mock
-   * today; a minimised, logged read tomorrow. Returns null for an unknown id.
+   * (default) or a live GET. Returns null for an unknown id.
    */
   async getUser(id: string): Promise<AdminUserSummary | null> {
-    // SEAM: replace with `await this.#get<AdminUserSummary>("/users/" + id)` (minimised, logged).
-    return getMockUserDetail(id);
+    return seam(() => getMockUserDetail(id), `/users/${id}`);
   },
 
   /**
@@ -170,8 +215,9 @@ export const adminApi = {
     id: string,
     reason: string,
   ): Promise<AdminUserFullRecord | null> {
-    // SEAM: replace with a reason-required, audit-logged POST `/users/{id}/full-record` to the admin-api,
-    // which writes the audit row server-side BEFORE returning. The reason travels in the request body.
+    // SEAM: stays mock-only (it is NOT a plain GET). The live form is a reason-required, audit-logged POST
+    // `/users/{id}/full-record` that writes the audit row server-side BEFORE returning; that reveal arrives
+    // with the audited admin-api post-D16, so the mock/live toggle does not route it yet.
     if (!reason.trim()) {
       throw new Error("A reason is required to reveal the full record.");
     }
@@ -205,10 +251,9 @@ export const adminApi = {
     void event;
   },
 
-  /** The managed-content list (the Content module). Mock today. */
+  /** The managed-content list (the Content module). Mock (default) or a live GET. */
   async getContent(): Promise<AdminContentItem[]> {
-    // SEAM: replace with `await this.#get<AdminContentItem[]>("/content")`.
-    return getMockContent();
+    return seam(() => getMockContent(), "/content");
   },
 
   /**
@@ -240,10 +285,9 @@ export const adminApi = {
     return setMockContentStatus(id, status);
   },
 
-  /** The waitlist signups (the E1 surface). Mock today. */
+  /** The waitlist signups (the E1 surface). Mock (default) or a live GET. */
   async getWaitlist(): Promise<WaitlistEntry[]> {
-    // SEAM: replace with `await this.#get<WaitlistEntry[]>("/waitlist")`.
-    return getMockWaitlist();
+    return seam(() => getMockWaitlist(), "/waitlist");
   },
 
   /**

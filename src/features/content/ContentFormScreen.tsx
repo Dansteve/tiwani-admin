@@ -1,9 +1,9 @@
 "use client";
 
-// The create / edit form route wrapper. It owns the page chrome (header, back link, pre-production
-// banner), the RBAC route guard, and (for edit) loading the item from the adminApi seam. The actual
-// fields + validation + save live in ContentForm. Splitting it this way keeps the route pages thin and
-// the form reusable.
+// The create / edit form route wrapper. It owns the page chrome (header, back link), the RBAC route
+// guard, and (for edit) loading the item from the adminApi seam. The actual fields + validation + save
+// live in ContentForm. Splitting it this way keeps the route pages thin and the form reusable. The
+// data-source banner is in the (admin) layout, so it is not repeated here.
 //
 // RBAC: writes need can(role, "content.write"). A role without it is redirected back to /content (the
 // list CTA is already hidden for that role; this makes the route defensive too). The role comes from the
@@ -22,7 +22,6 @@ import { can } from "@/lib/rbac";
 import { STUB_STAFF } from "@/lib/staff-session";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/EmptyState";
-import { PreProductionBanner } from "@/features/dashboard/PreProductionBanner";
 import { ContentForm } from "@/features/content/ContentForm";
 
 export function ContentFormScreen({ id }: { id?: string }) {
@@ -65,8 +64,6 @@ export function ContentFormScreen({ id }: { id?: string }) {
           {isEdit ? "Edit content" : "New content"}
         </h1>
       </header>
-
-      <PreProductionBanner />
 
       {isEdit && itemQuery.isLoading ? (
         <Card>

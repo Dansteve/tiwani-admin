@@ -17,7 +17,6 @@ import { ShieldCheck } from "lucide-react";
 
 import { adminApi } from "@/lib/admin-api/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PreProductionBanner } from "@/features/dashboard/PreProductionBanner";
 import { KpiCard } from "@/features/dashboard/KpiCard";
 import { SignupTrendChart } from "@/features/dashboard/SignupTrendChart";
 import { PlanDistributionChart } from "@/features/reporting/PlanDistributionChart";
@@ -54,8 +53,6 @@ export function ReportingScreen() {
           Platform health at a glance. Aggregate, non-identifying figures, for layout and review only.
         </p>
       </header>
-
-      <PreProductionBanner />
 
       {/* The aggregate-only red line, stated on the screen so it is impossible to miss. */}
       <Alert>
