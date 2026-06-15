@@ -19,13 +19,20 @@ import {
   getMockMetrics,
   getMockActivity,
   getMockSignupTrend,
+  getMockPlanDistribution,
+  getMockContentCounts,
+  getMockActiveUsersTrend,
   type AdminMetric,
   type ActivityItem,
   type TrendPoint,
+  type PlanDistributionPoint,
+  type ContentTypeCount,
+  type ActiveUsersPoint,
 } from "@/lib/mock/metrics";
 import { getMockUsers, type AdminUserSummary } from "@/lib/mock/users";
 import { getMockContent, type AdminContentItem } from "@/lib/mock/content";
 import { getMockWaitlist, type WaitlistEntry } from "@/lib/mock/waitlist";
+import { getMockStaff, type StaffMember } from "@/lib/mock/staff";
 
 /** The audited admin-api base URL (unset in dev -> the client stays on the mocks). */
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL ?? "";
@@ -61,6 +68,43 @@ export const adminApi = {
   async getSignupTrend(): Promise<TrendPoint[]> {
     // SEAM: replace with `await this.#get<TrendPoint[]>("/reporting/signup-trend")`.
     return getMockSignupTrend();
+  },
+
+  /**
+   * The aggregate plan-tier distribution for the reporting chart (a count per tier). Mock today; an
+   * aggregate, non-identifying reporting RPC tomorrow. Aggregate-only: a count per bucket, never an
+   * account (reporting is aggregate-only, README red line 9).
+   */
+  async getPlanDistribution(): Promise<PlanDistributionPoint[]> {
+    // SEAM: replace with `await this.#get<PlanDistributionPoint[]>("/reporting/plan-distribution")`.
+    return getMockPlanDistribution();
+  },
+
+  /**
+   * The aggregate content-by-type counts for the reporting chart (a count per content type). Mock today;
+   * an aggregate reporting RPC tomorrow. Aggregate-only: a count per type, never a content row.
+   */
+  async getContentCounts(): Promise<ContentTypeCount[]> {
+    // SEAM: replace with `await this.#get<ContentTypeCount[]>("/reporting/content-counts")`.
+    return getMockContentCounts();
+  },
+
+  /**
+   * The aggregate active-users series for the reporting chart (a count per week). Mock today; an
+   * aggregate, non-identifying reporting RPC tomorrow. Aggregate-only: a count per week, never an identity.
+   */
+  async getActiveUsersTrend(): Promise<ActiveUsersPoint[]> {
+    // SEAM: replace with `await this.#get<ActiveUsersPoint[]>("/reporting/active-users")`.
+    return getMockActiveUsersTrend();
+  },
+
+  /**
+   * The staff list for Settings (read-only). Mock today; a role-administration RPC tomorrow (staff.manage
+   * gated, audit-logged). Carries no family-user data: these are staff members, not Coordinators.
+   */
+  async getStaff(): Promise<StaffMember[]> {
+    // SEAM: replace with `await this.#get<StaffMember[]>("/staff")` (staff.manage gated, logged).
+    return getMockStaff();
   },
 
   /** The field-minimised Coordinator list (the E2 support view). Mock today. */
