@@ -1,12 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PreProductionBanner } from "@/features/dashboard/PreProductionBanner";
 
 // A clean, on-brand "Coming in this module" placeholder for a Phase-2 route (Users / Content / Reporting
 // / Settings, less the parts the foundation builds). The nav is whole and every route resolves; the
-// Phase-2 developers replace the placeholder with their screen. Carries the pre-production banner so the
-// honest "mock data" label is on every surface.
+// Phase-2 developers replace the placeholder with their screen. The data-source banner is in the (admin)
+// layout, so the honest "mock data" label is on every surface without each screen repeating it.
 export function ModulePlaceholder({
   title,
   description,
@@ -21,8 +20,6 @@ export function ModulePlaceholder({
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h1>
       </header>
-
-      <PreProductionBanner />
 
       <Card>
         <CardHeader className="items-start gap-3">

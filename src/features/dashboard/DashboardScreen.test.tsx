@@ -88,12 +88,9 @@ describe("DashboardScreen", () => {
     expect(within(activitySection).getByRole("table")).toBeInTheDocument();
   });
 
-  it("keeps the pre-production banner visible", async () => {
-    renderDashboard();
-    expect(
-      await screen.findByText(/Pre-production preview, mock data/i),
-    ).toBeInTheDocument();
-  });
+  // The data-source banner moved to the (admin) layout (it renders once for every page), so it is no
+  // longer part of the DashboardScreen. Its mode-awareness + the gated MOCK/LIVE toggle are tested
+  // directly in features/dashboard/PreProductionBanner.test.tsx.
 
   it("emits no off-brand hardcoded hex in the rendered markup", async () => {
     const { container } = renderDashboard();
