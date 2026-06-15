@@ -57,24 +57,29 @@ describe("mock/users (field-minimised, synthetic)", () => {
 });
 
 describe("mock/content (synthetic)", () => {
-  it("returns content items with a lifecycle status", () => {
+  it("returns content items with a type, a lifecycle status, and form fields", () => {
     const content = getMockContent();
     expect(content.length).toBeGreaterThan(0);
     for (const item of content) {
       expect(typeof item.title).toBe("string");
+      expect(["strategy", "resource", "announcement"]).toContain(item.type);
       expect(["draft", "published", "archived"]).toContain(item.status);
+      expect(typeof item.summary).toBe("string");
+      expect(typeof item.body).toBe("string");
+      expect(typeof item.updatedAt).toBe("string");
     }
   });
 });
 
 describe("mock/waitlist (synthetic)", () => {
-  it("returns signups with a known care-context and an obviously-fake email", () => {
+  it("returns signups with a known care-context, a status, and an obviously-fake email", () => {
     const waitlist = getMockWaitlist();
     expect(waitlist.length).toBeGreaterThan(0);
     for (const entry of waitlist) {
       expect(["child", "older_adult", "long_term_condition", "professional"]).toContain(
-        entry.context
+        entry.careContext
       );
+      expect(["pending", "contacted"]).toContain(entry.status);
       expect(entry.email).toMatch(/@example\.test$/);
     }
   });

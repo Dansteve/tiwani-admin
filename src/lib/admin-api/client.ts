@@ -31,8 +31,20 @@ import {
   type AdminUserSummary,
   type AdminUserFullRecord,
 } from "@/lib/mock/users";
-import { getMockContent, type AdminContentItem } from "@/lib/mock/content";
-import { getMockWaitlist, type WaitlistEntry } from "@/lib/mock/waitlist";
+import {
+  getMockContent,
+  addMockContent,
+  editMockContent,
+  setMockContentStatus,
+  type AdminContentItem,
+  type ContentInput,
+  type ContentStatus,
+} from "@/lib/mock/content";
+import {
+  getMockWaitlist,
+  markMockWaitlistContacted,
+  type WaitlistEntry,
+} from "@/lib/mock/waitlist";
 
 /**
  * A privileged-read audit event. In the real admin-api EVERY privileged read writes one of these to the
@@ -155,9 +167,48 @@ export const adminApi = {
     return getMockContent();
   },
 
+  /**
+   * Create a content item. Mock today (an in-memory append). When the audited admin-api lands this
+   * becomes an authorized, reason-required, audit-logged WRITE (POST /content): the staff role's
+   * content.write grant is checked server-side, not just in the UI. Returns the created item.
+   */
+  async createContent(input: ContentInput): Promise<AdminContentItem> {
+    // SEAM: replace with `await this.#post<AdminContentItem>("/content", input)`.
+    return addMockContent(input);
+  },
+
+  /**
+   * Replace a content item's fields. Mock today (an in-memory edit). Becomes an audit-logged WRITE
+   * (PUT /content/:id) behind the content.write grant. Returns the updated item, or null if missing.
+   */
+  async updateContent(id: string, input: ContentInput): Promise<AdminContentItem | null> {
+    // SEAM: replace with `await this.#put<AdminContentItem>(`/content/${id}`, input)`.
+    return editMockContent(id, input);
+  },
+
+  /**
+   * Set just a content item's status (publish / unpublish / archive). Mock today (an in-memory status
+   * flip). Becomes an audit-logged WRITE (PATCH /content/:id/status) behind the content.write grant.
+   * Returns the updated item, or null if missing.
+   */
+  async setContentStatus(id: string, status: ContentStatus): Promise<AdminContentItem | null> {
+    // SEAM: replace with `await this.#patch<AdminContentItem>(`/content/${id}/status`, { status })`.
+    return setMockContentStatus(id, status);
+  },
+
   /** The waitlist signups (the E1 surface). Mock today. */
   async getWaitlist(): Promise<WaitlistEntry[]> {
     // SEAM: replace with `await this.#get<WaitlistEntry[]>("/waitlist")`.
     return getMockWaitlist();
+  },
+
+  /**
+   * Flip a waitlist signup to "contacted". Mock today (an in-memory status flip). Becomes an
+   * audit-logged WRITE (PATCH /waitlist/:id) behind the waitlist.manage grant when the admin-api lands.
+   * Returns the updated entry, or null if missing.
+   */
+  async markWaitlistContacted(id: string): Promise<WaitlistEntry | null> {
+    // SEAM: replace with `await this.#patch<WaitlistEntry>(`/waitlist/${id}/contacted`, {})`.
+    return markMockWaitlistContacted(id);
   },
 };
