@@ -1,10 +1,13 @@
-// The AdminShell render test. It pins what the shell guarantees: the five primary destinations are
-// present (in both the desktop sidebar and the mobile bottom bar), the brand Wordmark + the calm "Admin"
-// qualifier show, the active route announces aria-current, every nav icon is aria-hidden with a real text
-// label (accessibility), and NO off-brand hex leaks into the markup (the brand-token rule).
+// The AdminShell render test. It pins what the shell guarantees: the five PRIMARY destinations are present
+// (in both the desktop sidebar and the mobile bottom bar), the SECONDARY destination (Blog) is on the
+// desktop sidebar and reachable via the mobile "More" menu (not crowding the five-tab bottom bar), the
+// brand Wordmark + the calm "Admin" qualifier show, the active route announces aria-current, every nav
+// icon is aria-hidden with a real text label (accessibility), and NO off-brand hex leaks into the markup
+// (the brand-token rule).
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 // next/navigation: the shell reads usePathname. Pin it to the dashboard root.
 vi.mock("next/navigation", () => ({
@@ -38,7 +41,7 @@ vi.mock("@/features/auth/actions", () => ({
 import { ThemeProvider } from "@/state/ThemeProvider";
 import { AdminShell } from "@/components/AdminShell";
 
-const DESTINATIONS = ["Dashboard", "Users", "Content", "Reporting", "Settings"];
+const PRIMARY_DESTINATIONS = ["Dashboard", "Users", "Content", "Reporting", "Settings"];
 
 function renderShell() {
   return render(
@@ -60,14 +63,42 @@ describe("AdminShell", () => {
 
   it("renders all five primary destinations in both the sidebar and the bottom bar", () => {
     renderShell();
-    // Two Primary navs (sidebar + mobile bottom bar): each carries the five destinations.
+    // Two Primary navs (the desktop sidebar + the mobile bottom bar): each carries the five primary
+    // destinations.
     const navs = screen.getAllByRole("navigation", { name: "Primary" });
     expect(navs).toHaveLength(2);
     for (const nav of navs) {
-      for (const label of DESTINATIONS) {
+      for (const label of PRIMARY_DESTINATIONS) {
         expect(within(nav).getByRole("link", { name: new RegExp(label, "i") })).toBeInTheDocument();
       }
     }
+  });
+
+  it("keeps the mobile bottom bar at exactly the five primary destinations (Blog is not a tab)", () => {
+    renderShell();
+    // The two Primary navs are the desktop sidebar (index 0) then the mobile bottom bar (index 1). The
+    // bottom bar must stay at the five primary tabs: Blog goes to the "More" menu, not the bar.
+    const navs = screen.getAllByRole("navigation", { name: "Primary" });
+    const bottomBar = navs[1];
+    expect(within(bottomBar).getAllByRole("link")).toHaveLength(PRIMARY_DESTINATIONS.length);
+    expect(within(bottomBar).queryByRole("link", { name: /blog/i })).not.toBeInTheDocument();
+  });
+
+  it("lists Blog (the secondary destination) inline on the desktop sidebar", () => {
+    renderShell();
+    // The desktop sidebar (the first Primary nav) lists every destination inline, so a desktop user never
+    // needs the "More" menu: it carries the five primary plus Blog.
+    const sidebar = screen.getAllByRole("navigation", { name: "Primary" })[0];
+    expect(within(sidebar).getByRole("link", { name: /blog/i })).toBeInTheDocument();
+  });
+
+  it("surfaces Blog via the mobile 'More' menu (so the bottom bar stays uncrowded)", async () => {
+    renderShell();
+    // The "More" disclosure is collapsed by default; opening it reveals the secondary destinations.
+    const moreTrigger = screen.getByRole("button", { name: /more/i });
+    await userEvent.click(moreTrigger);
+    const moreMenu = screen.getByRole("navigation", { name: /more destinations/i });
+    expect(within(moreMenu).getByRole("link", { name: /blog/i })).toBeInTheDocument();
   });
 
   it("marks the active route with aria-current in the sidebar", () => {

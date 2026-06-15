@@ -52,6 +52,16 @@ import {
   type ContentStatus,
 } from "@/lib/mock/content";
 import {
+  getMockBlogPosts,
+  getMockBlogPost,
+  addMockBlogPost,
+  editMockBlogPost,
+  setMockBlogPostStatus,
+  type BlogPost,
+  type BlogPostInput,
+  type BlogStatus,
+} from "@/lib/mock/blog";
+import {
   getMockWaitlist,
   markMockWaitlistContacted,
   type WaitlistEntry,
@@ -283,6 +293,50 @@ export const adminApi = {
   async setContentStatus(id: string, status: ContentStatus): Promise<AdminContentItem | null> {
     // SEAM: replace with `await this.#patch<AdminContentItem>(`/content/${id}/status`, { status })`.
     return setMockContentStatus(id, status);
+  },
+
+  // BLOG (the Blog module). The Admin AUTHORS posts here; PUBLISHED posts are later persisted by the
+  // audited admin-api, then exposed by a SEPARATE public, unauthenticated read API and rendered on the
+  // website (see docs/BLOG.md). Reads use the mock/live seam; writes stay mock-only (like content writes).
+
+  /** The full blog-post list for the Blog module (drafts + published). Mock (default) or a live GET. */
+  async getBlogPosts(): Promise<BlogPost[]> {
+    return seam(() => getMockBlogPosts(), "/blog");
+  },
+
+  /** A single blog post by id (for the edit form). Mock (default) or a live GET. Null for an unknown id. */
+  async getBlogPost(id: string): Promise<BlogPost | null> {
+    return seam(() => getMockBlogPost(id), `/blog/${id}`);
+  },
+
+  /**
+   * Create a blog post. Mock today (an in-memory append). When the audited admin-api lands this becomes an
+   * authorized, audit-logged WRITE (POST /blog) behind the content.write grant (blog is authored content).
+   * Returns the created post.
+   */
+  async createBlogPost(input: BlogPostInput): Promise<BlogPost> {
+    // SEAM: replace with `await this.#post<BlogPost>("/blog", input)`.
+    return addMockBlogPost(input);
+  },
+
+  /**
+   * Replace a blog post's fields. Mock today (an in-memory edit). Becomes an audit-logged WRITE
+   * (PUT /blog/:id) behind the content.write grant. Returns the updated post, or null if missing.
+   */
+  async updateBlogPost(id: string, input: BlogPostInput): Promise<BlogPost | null> {
+    // SEAM: replace with `await this.#put<BlogPost>(`/blog/${id}`, input)`.
+    return editMockBlogPost(id, input);
+  },
+
+  /**
+   * Set just a blog post's status (publish / unpublish). Mock today (an in-memory status flip). Becomes an
+   * audit-logged WRITE (PATCH /blog/:id/status) behind the content.write grant. Publishing is the gate to
+   * the public read API: only status="published" posts are ever exposed publicly. Returns the updated
+   * post, or null if missing.
+   */
+  async setBlogPostStatus(id: string, status: BlogStatus): Promise<BlogPost | null> {
+    // SEAM: replace with `await this.#patch<BlogPost>(`/blog/${id}/status`, { status })`.
+    return setMockBlogPostStatus(id, status);
   },
 
   /** The waitlist signups (the E1 surface). Mock (default) or a live GET. */

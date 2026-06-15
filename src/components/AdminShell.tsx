@@ -9,7 +9,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Users, FileText, BarChart3, Settings } from "lucide-react";
+import { LayoutGrid, Users, FileText, BarChart3, Settings, Newspaper } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/Wordmark";
@@ -18,15 +18,27 @@ import { isActive, type NavItem } from "@/components/adminNav";
 import { SecondaryNavMenu } from "@/components/SecondaryNavMenu";
 import { SignOutButton } from "@/features/auth/SignOutButton";
 
-// The full destination set. Dashboard is the root ("/"); the rest are the Phase-2 module routes, present
-// now as placeholders so the nav is whole and every route resolves.
-const NAV: NavItem[] = [
+// The PRIMARY destinations: Dashboard is the root ("/"); the rest are the core module routes. These five
+// are the mobile bottom-tab set (a bottom bar of five tabs stays at comfortable 44px+ tap widths; a sixth
+// would crowd it), so a new destination goes to SECONDARY_NAV, not here.
+const PRIMARY_NAV: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutGrid },
   { href: "/users", label: "Users", icon: Users },
   { href: "/content", label: "Content", icon: FileText },
   { href: "/reporting", label: "Reporting", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
+
+// The SECONDARY destinations: the desktop sidebar lists them inline below the primary set, and the mobile
+// "More" menu surfaces them, so the mobile bottom bar stays at five tabs. Blog (authored content) lives
+// here so the bottom bar does not grow.
+const SECONDARY_NAV: NavItem[] = [
+  { href: "/blog", label: "Blog", icon: Newspaper },
+];
+
+// The desktop sidebar lists every destination inline (primary then secondary), so a desktop user never
+// needs a "More" menu.
+const SIDEBAR_NAV: NavItem[] = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
 /** The small calm qualifier under the wordmark, so staff know this is the Admin surface (not shouty). */
 function AdminQualifier({ className }: { className?: string }) {
@@ -59,7 +71,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <AdminQualifier className="mt-2 self-start" />
 
         <nav className="mt-8 flex flex-col gap-1" aria-label="Primary">
-          {NAV.map((item) => {
+          {SIDEBAR_NAV.map((item) => {
             const active = isActive(pathname, item.href);
             const Icon = item.icon;
             return (
@@ -103,7 +115,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <ThemeToggle variant="icon" />
               <SecondaryNavMenu
                 pathname={pathname}
-                items={[]}
+                items={SECONDARY_NAV}
                 footer={<SignOutButton variant="menu" />}
               />
             </div>
@@ -112,12 +124,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Mobile bottom tabs (below lg). The five destinations fit comfortably at a 44px+ tap width. */}
+      {/* Mobile bottom tabs (below lg). The five PRIMARY destinations fit comfortably at a 44px+ tap
+          width; the secondary destinations (Blog) live in the "More" menu so the bar does not crowd. */}
       <nav
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        {NAV.map((item) => {
+        {PRIMARY_NAV.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
           return (
