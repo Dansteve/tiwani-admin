@@ -6,9 +6,10 @@
     "app-tiwani": {
       "hosting": {
         "admin": [
-          "tiwani-admin"
+          "admin-tiwani-2026"
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }
