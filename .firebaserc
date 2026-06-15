@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "app-tiwani"
+  },
+  "targets": {
+    "app-tiwani": {
+      "hosting": {
+        "admin": [
+          "tiwani-admin"
+        ]
+      }
+    }
+  }
+}

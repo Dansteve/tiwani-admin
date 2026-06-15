@@ -1,0 +1,5 @@
+/* Entry stylesheet (mirrors tiwani-app's import chain). The TIWANI brand tokens live in
+   styles/theme.css; this app shares the family app's exact token set (Decisions.md D5/D9). */
+@import '../styles/fonts.css';
+@import '../styles/tailwind.css';
+@import '../styles/theme.css';
