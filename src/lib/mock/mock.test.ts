@@ -5,10 +5,17 @@
 
 import { describe, it, expect } from "vitest";
 
-import { getMockMetrics, getMockActivity } from "@/lib/mock/metrics";
+import {
+  getMockMetrics,
+  getMockActivity,
+  getMockPlanDistribution,
+  getMockContentCounts,
+  getMockActiveUsersTrend,
+} from "@/lib/mock/metrics";
 import { getMockUsers } from "@/lib/mock/users";
 import { getMockContent } from "@/lib/mock/content";
 import { getMockWaitlist } from "@/lib/mock/waitlist";
+import { getMockStaff } from "@/lib/mock/staff";
 
 describe("mock/metrics", () => {
   it("returns the four KPI tiles, each with a key, label, and string value", () => {
@@ -36,6 +43,45 @@ describe("mock/metrics", () => {
       expect(typeof item.id).toBe("string");
       expect(typeof item.summary).toBe("string");
       expect(typeof item.when).toBe("string");
+    }
+  });
+
+  it("returns aggregate reporting series that carry no identity fields (counts only)", () => {
+    const plan = getMockPlanDistribution();
+    const content = getMockContentCounts();
+    const active = getMockActiveUsersTrend();
+    expect(plan.length).toBeGreaterThan(0);
+    expect(content.length).toBeGreaterThan(0);
+    expect(active.length).toBeGreaterThan(0);
+    for (const point of plan) {
+      expect(typeof point.tier).toBe("string");
+      expect(typeof point.accounts).toBe("number");
+    }
+    for (const bucket of content) {
+      expect(typeof bucket.type).toBe("string");
+      expect(typeof bucket.items).toBe("number");
+    }
+    for (const point of active) {
+      expect(typeof point.week).toBe("string");
+      expect(typeof point.activeUsers).toBe("number");
+    }
+    // Aggregate-only: none of these shapes has an id / name / email key (no individual could ride along).
+    const serialised = JSON.stringify([plan, content, active]).toLowerCase();
+    expect(serialised).not.toContain("email");
+    expect(serialised).not.toMatch(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/i);
+  });
+});
+
+describe("mock/staff (synthetic, read-only)", () => {
+  it("returns staff members with a known role and an obviously-internal email", () => {
+    const staff = getMockStaff();
+    expect(staff.length).toBeGreaterThan(0);
+    for (const member of staff) {
+      expect(typeof member.id).toBe("string");
+      expect(["support_read", "dsar_handler", "role_admin"]).toContain(member.role);
+      // Obviously synthetic: a demo name and an internal (.internal) email, never a real address.
+      expect(member.name).toMatch(/\(stub\)$/);
+      expect(member.email).toMatch(/@tiwani\.internal$/);
     }
   });
 });

@@ -1,15 +1,8 @@
-import { BarChart3 } from "lucide-react";
+import { ReportingScreen } from "@/features/reporting/ReportingScreen";
 
-import { ModulePlaceholder } from "@/components/ModulePlaceholder";
-
-// The Reporting module placeholder (aggregate, non-identifying platform metrics). Wired into the shell so
-// the nav is whole; replaced by the Phase-2 Reporting screen.
+// The Reporting module: aggregate, non-identifying platform analytics (Decisions.md D16, README red
+// line 9). The route segment stays thin; the screen lives in the reporting feature, behind the
+// server-side staff gate.
 export default function ReportingPage() {
-  return (
-    <ModulePlaceholder
-      title="Reporting"
-      description="Aggregate, non-identifying platform metrics and trends. Built from minimised data, never a whole-population browse of records."
-      icon={BarChart3}
-    />
-  );
+  return <ReportingScreen />;
 }
