@@ -1,15 +1,8 @@
-import { Users } from "lucide-react";
+import { UsersScreen } from "@/features/users/UsersScreen";
 
-import { ModulePlaceholder } from "@/components/ModulePlaceholder";
-
-// The Users module placeholder (the E2 field-minimised support views land here). Wired into the shell so
-// the nav is whole; replaced by the Phase-2 Users screen.
+// The Users module (E2): the search-first, field-minimised Coordinator support view. The full sensitive
+// record sits behind a higher-privilege, reason-required, separately-logged reveal inside the detail
+// surface (Decisions.md D16, the DPO red lines). Everything renders against the mock seam; no real data.
 export default function UsersPage() {
-  return (
-    <ModulePlaceholder
-      title="Users"
-      description="Read-only, field-minimised Coordinator support views. The full sensitive record sits behind a higher-privilege, reason-required, separately-logged action."
-      icon={Users}
-    />
-  );
+  return <UsersScreen />;
 }
