@@ -47,6 +47,24 @@ describe("PreProductionBanner: default + mock copy", () => {
   });
 });
 
+describe("PreProductionBanner: client-resolved role (no prop)", () => {
+  it("resolves the role from the staff session (defaulting to STUB_STAFF) when no role prop is passed", () => {
+    // The layout no longer passes a server `role` prop; the banner reads useStaffRole() instead. With no
+    // cookie set, the hook falls back to STUB_STAFF (super_admin), a roles.manage holder, so the toggle
+    // shows. This pins the new default path (the prop is now an optional test override).
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <DataSourceProvider>
+          <PreProductionBanner />
+        </DataSourceProvider>
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText(/Pre-production preview, mock data/i)).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: /data source/i })).toBeInTheDocument();
+  });
+});
+
 describe("PreProductionBanner: the gated toggle (roles.manage)", () => {
   it("shows the MOCK/LIVE toggle for a roles.manage role (super_admin)", () => {
     renderBanner("super_admin");

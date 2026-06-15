@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wordmark } from "@/components/Wordmark";
@@ -10,9 +11,9 @@ export const metadata: Metadata = {
 };
 
 // The staff sign-in screen. Deliberately OUTSIDE the (admin) route group, so it renders with no shell and
-// needs no session (it is the middleware redirect target). A calm, centred card with the Wordmark; the
-// form is a STUB (src/features/auth/actions.ts) for the real separate-audience staff IdP with enforced
-// MFA, gated per Decisions.md D16.
+// needs no session (it is the middleware redirect target / the client guard's destination). A calm, centred
+// card with the Wordmark; the form is a client STUB (src/features/auth/StaffSignInForm.tsx) for the real
+// separate-audience staff IdP with enforced MFA, gated per Decisions.md D16.
 export default function LoginPage() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-10">
@@ -32,7 +33,12 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <StaffSignInForm />
+            {/* Suspense boundary: StaffSignInForm reads useSearchParams() (to honour the `next` redirect
+                target), which requires a boundary so the static-export prerender can bail to the client
+                cleanly rather than erroring. Harmless under SSR. */}
+            <Suspense fallback={null}>
+              <StaffSignInForm />
+            </Suspense>
           </CardContent>
         </Card>
 

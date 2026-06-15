@@ -19,6 +19,7 @@ import { FlaskConical, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useDataSource } from "@/state/DataSourceProvider";
+import { useStaffRole } from "@/lib/use-staff-session";
 import { can, type StaffRole } from "@/lib/rbac";
 import type { DataMode } from "@/lib/admin-api/mode";
 
@@ -69,11 +70,16 @@ function DataSourceToggle() {
   );
 }
 
+// `role` is an optional OVERRIDE (a test can pin the role directly). When omitted, the role is resolved
+// CLIENT-side from the staff session cookie via useStaffRole() (the layout no longer reads cookies()
+// server-side, so the (admin) tree is static-exportable). The hook reads first, the prop overrides it.
 export function PreProductionBanner({ role }: { role?: StaffRole | null }) {
   const { mode } = useDataSource();
+  const resolvedRole = useStaffRole();
+  const effectiveRole = role === undefined ? resolvedRole : role;
   // Only a roles.manage role (super_admin / role_admin) may flip to live (fail-closed: an unknown / lower
   // role gets no switch). The frontend gate only decides what to SHOW; real enforcement is the admin-api.
-  const canSwitch = can(role, "roles.manage");
+  const canSwitch = can(effectiveRole, "roles.manage");
 
   if (mode === "live") {
     return (

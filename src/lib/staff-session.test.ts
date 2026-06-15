@@ -3,13 +3,16 @@
 // garbage cookie decodes to null (so the gate treats it as "no session"). The cookie NAME is asserted
 // distinct, because the red line is a SEPARATE auth audience from the family app.
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 
 import {
   STAFF_SESSION_COOKIE,
   STUB_STAFF,
   encodeStaffSession,
   decodeStaffSession,
+  readStaffSessionFromDocument,
+  writeStaffSessionToDocument,
+  clearStaffSessionFromDocument,
 } from "@/lib/staff-session";
 import { SUPER_ADMIN_EMAIL } from "@/lib/rbac";
 
@@ -45,5 +48,35 @@ describe("staff-session", () => {
     expect(STUB_STAFF.role).toBe("super_admin");
     expect(STUB_STAFF.email).toBe(SUPER_ADMIN_EMAIL);
     expect(STUB_STAFF.name).toMatch(/super admin/i);
+  });
+});
+
+// The CLIENT cookie helpers: the static-export sign-in path writes the session cookie in the browser (no
+// server action under output: "export") and the client gate / role hook read it back. These pin the
+// document.cookie round-trip and the absent / clear cases (jsdom provides document.cookie).
+describe("staff-session: client cookie helpers (static-export path)", () => {
+  afterEach(() => {
+    // Clear the cookie between tests so one case does not leak into the next.
+    clearStaffSessionFromDocument();
+  });
+
+  it("round-trips the session through document.cookie (write -> read)", () => {
+    writeStaffSessionToDocument(STUB_STAFF);
+    // The cookie is present under the separate-audience name.
+    expect(document.cookie).toContain(`${STAFF_SESSION_COOKIE}=`);
+    // And reads back to the same identity (the value reuses the one encode/decode codec).
+    expect(readStaffSessionFromDocument()).toEqual(STUB_STAFF);
+  });
+
+  it("reads null when no session cookie is set (the gate treats it as no session)", () => {
+    clearStaffSessionFromDocument();
+    expect(readStaffSessionFromDocument()).toBeNull();
+  });
+
+  it("clears the session cookie (the sign-out path)", () => {
+    writeStaffSessionToDocument(STUB_STAFF);
+    expect(readStaffSessionFromDocument()).not.toBeNull();
+    clearStaffSessionFromDocument();
+    expect(readStaffSessionFromDocument()).toBeNull();
   });
 });

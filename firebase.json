@@ -1,14 +1,34 @@
 {
   "hosting": {
     "target": "admin",
-    "source": ".",
+    "public": "out",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "frameworksBackend": {
-      "region": "us-central1"
-    }
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "/content/*/edit",
+        "destination": "/content/c-0001/edit.html"
+      },
+      {
+        "source": "/blog/*/edit",
+        "destination": "/blog/b-0001/edit.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          }
+        ]
+      }
+    ]
   }
 }

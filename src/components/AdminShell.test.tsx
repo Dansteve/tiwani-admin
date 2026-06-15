@@ -9,9 +9,11 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-// next/navigation: the shell reads usePathname. Pin it to the dashboard root.
+// next/navigation: the shell reads usePathname; the (client) SignOutButton reads useRouter. Pin the path
+// to a known route and stub the router so the sign-out handler does not need the app-router runtime.
 vi.mock("next/navigation", () => ({
   usePathname: () => "/users",
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 
 // next/link: stub to a plain anchor so it renders without the app-router runtime.
@@ -29,12 +31,6 @@ vi.mock("next/link", () => ({
       {children}
     </a>
   ),
-}));
-
-// The sign-out button POSTs to a server action; stub the actions module so jsdom does not try to run it.
-vi.mock("@/features/auth/actions", () => ({
-  signOut: vi.fn(),
-  signIn: vi.fn(),
 }));
 
 // The theme toggle reads the ThemeProvider; render a real provider around the shell.

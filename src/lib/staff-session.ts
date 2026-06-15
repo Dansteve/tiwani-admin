@@ -63,6 +63,45 @@ export function encodeStaffSession(session: StaffSession): string {
   return Buffer.from(json, "utf8").toString("base64");
 }
 
+/**
+ * Read the stub session straight from `document.cookie` in the browser, or null when there is no document
+ * (SSR / tests without jsdom) or the cookie is absent / unparseable. This is the CLIENT read of the same
+ * cookie the server middleware checks: it exists because the static-export build (no server runtime) must
+ * resolve the role and gate the shell client-side. It reuses decodeStaffSession (one codec, no second
+ * session path) and never throws.
+ */
+export function readStaffSessionFromDocument(): StaffSession | null {
+  if (typeof document === "undefined") return null;
+  const prefix = `${STAFF_SESSION_COOKIE}=`;
+  const raw = document.cookie
+    .split("; ")
+    .find((part) => part.startsWith(prefix));
+  if (!raw) return null;
+  return decodeStaffSession(decodeURIComponent(raw.slice(prefix.length)));
+}
+
+/**
+ * Write the stub session cookie from the browser (the static-export sign-in path: there is no server action
+ * to set it, so the client sets it directly). Same value the server action writes, encodeStaffSession(...).
+ * NOT httpOnly here (a client-set cookie cannot be), sameSite=lax, path=/, an 8h max-age, secure on https.
+ * This is a STUB session, not a security boundary (src/lib/staff-session.ts header); the real session is an
+ * httpOnly, server-set IdP token. No-op when there is no document (SSR / tests without jsdom).
+ */
+export function writeStaffSessionToDocument(session: StaffSession): void {
+  if (typeof document === "undefined") return;
+  const value = encodeURIComponent(encodeStaffSession(session));
+  const maxAge = 60 * 60 * 8;
+  const secure =
+    typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${STAFF_SESSION_COOKIE}=${value}; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
+}
+
+/** Clear the stub session cookie from the browser (the static-export sign-out path). No-op without a document. */
+export function clearStaffSessionFromDocument(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${STAFF_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
 /** Decode a stub session cookie value, or null if it is absent / unparseable. */
 export function decodeStaffSession(value: string | undefined | null): StaffSession | null {
   if (!value) return null;
