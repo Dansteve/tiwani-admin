@@ -9,7 +9,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Users, FileText, BarChart3, Settings, Newspaper } from "lucide-react";
+import { LayoutGrid, Users, FileText, BarChart3, Settings, Newspaper, Activity } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/Wordmark";
@@ -30,10 +30,11 @@ const PRIMARY_NAV: NavItem[] = [
 ];
 
 // The SECONDARY destinations: the desktop sidebar lists them inline below the primary set, and the mobile
-// "More" menu surfaces them, so the mobile bottom bar stays at five tabs. Blog (authored content) lives
-// here so the bottom bar does not grow.
+// "More" menu surfaces them, so the mobile bottom bar stays at five tabs. Blog (authored content) and
+// System (the read-only operational status page) live here so the bottom bar does not grow.
 const SECONDARY_NAV: NavItem[] = [
   { href: "/blog", label: "Blog", icon: Newspaper },
+  { href: "/system", label: "System", icon: Activity },
 ];
 
 // The desktop sidebar lists every destination inline (primary then secondary), so a desktop user never

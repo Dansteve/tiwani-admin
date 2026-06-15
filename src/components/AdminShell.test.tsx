@@ -70,31 +70,34 @@ describe("AdminShell", () => {
     }
   });
 
-  it("keeps the mobile bottom bar at exactly the five primary destinations (Blog is not a tab)", () => {
+  it("keeps the mobile bottom bar at exactly the five primary destinations (Blog / System are not tabs)", () => {
     renderShell();
     // The two Primary navs are the desktop sidebar (index 0) then the mobile bottom bar (index 1). The
-    // bottom bar must stay at the five primary tabs: Blog goes to the "More" menu, not the bar.
+    // bottom bar must stay at the five primary tabs: Blog and System go to the "More" menu, not the bar.
     const navs = screen.getAllByRole("navigation", { name: "Primary" });
     const bottomBar = navs[1];
     expect(within(bottomBar).getAllByRole("link")).toHaveLength(PRIMARY_DESTINATIONS.length);
     expect(within(bottomBar).queryByRole("link", { name: /blog/i })).not.toBeInTheDocument();
+    expect(within(bottomBar).queryByRole("link", { name: /system/i })).not.toBeInTheDocument();
   });
 
-  it("lists Blog (the secondary destination) inline on the desktop sidebar", () => {
+  it("lists the secondary destinations (Blog, System) inline on the desktop sidebar", () => {
     renderShell();
     // The desktop sidebar (the first Primary nav) lists every destination inline, so a desktop user never
-    // needs the "More" menu: it carries the five primary plus Blog.
+    // needs the "More" menu: it carries the five primary plus the secondary destinations.
     const sidebar = screen.getAllByRole("navigation", { name: "Primary" })[0];
     expect(within(sidebar).getByRole("link", { name: /blog/i })).toBeInTheDocument();
+    expect(within(sidebar).getByRole("link", { name: /system/i })).toBeInTheDocument();
   });
 
-  it("surfaces Blog via the mobile 'More' menu (so the bottom bar stays uncrowded)", async () => {
+  it("surfaces Blog and System via the mobile 'More' menu (so the bottom bar stays uncrowded)", async () => {
     renderShell();
     // The "More" disclosure is collapsed by default; opening it reveals the secondary destinations.
     const moreTrigger = screen.getByRole("button", { name: /more/i });
     await userEvent.click(moreTrigger);
     const moreMenu = screen.getByRole("navigation", { name: /more destinations/i });
     expect(within(moreMenu).getByRole("link", { name: /blog/i })).toBeInTheDocument();
+    expect(within(moreMenu).getByRole("link", { name: /system/i })).toBeInTheDocument();
   });
 
   it("marks the active route with aria-current in the sidebar", () => {

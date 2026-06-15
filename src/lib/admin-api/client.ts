@@ -67,6 +67,7 @@ import {
   type WaitlistEntry,
 } from "@/lib/mock/waitlist";
 import { getMockStaff, type StaffMember } from "@/lib/mock/staff";
+import { getMockSystemHealth, type SystemHealth } from "@/lib/mock/system";
 import { getDataMode } from "@/lib/admin-api/mode";
 
 /**
@@ -199,6 +200,16 @@ export const adminApi = {
    */
   async getStaff(): Promise<StaffMember[]> {
     return seam(() => getMockStaff(), "/staff");
+  },
+
+  /**
+   * The System Health snapshot for the operational status page (services + diagnostics + overall roll-up).
+   * Mock (default) or a live GET. The live form is the audited admin-api's `/system/health` aggregation,
+   * which probes the real dependencies server-side. Carries NO family-user data: it is infrastructure
+   * status only, so it is read-only and visible to all staff roles.
+   */
+  async getSystemHealth(): Promise<SystemHealth> {
+    return seam(() => getMockSystemHealth(), "/system/health");
   },
 
   /** The field-minimised Coordinator list (the E2 support view). Mock (default) or a live GET. */
