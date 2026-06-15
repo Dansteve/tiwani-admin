@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 import { adminApi, liveGet, isAdminApiConfigured } from "@/lib/admin-api/client";
 import { getMockMetrics } from "@/lib/mock/metrics";
+import { getMockSystemHealth } from "@/lib/mock/system";
 import { setDataMode } from "@/lib/admin-api/mode";
 
 describe("seam: mock mode (the default) returns the mock data", () => {
@@ -30,6 +31,13 @@ describe("seam: mock mode (the default) returns the mock data", () => {
   it("getContent and getWaitlist return their mocks", async () => {
     expect((await adminApi.getContent()).length).toBeGreaterThan(0);
     expect((await adminApi.getWaitlist()).length).toBeGreaterThan(0);
+  });
+
+  it("getSystemHealth returns the mock system health (services + diagnostics + overall)", async () => {
+    const health = await adminApi.getSystemHealth();
+    expect(health).toEqual(getMockSystemHealth());
+    expect(health.services.length).toBeGreaterThan(0);
+    expect(health.diagnostics.length).toBeGreaterThan(0);
   });
 });
 
