@@ -1,8 +1,20 @@
 // MOCK DATA, pre-production. NOT real user data. Replaced by the audited tiwani-admin-api (D16) behind
 // the launch gates (key rotation, DPIA, RBAC + MFA + audit log, pen test).
 //
-// Synthetic platform metrics for the dashboard's KPI row + activity panel. Numbers are obviously
-// placeholder figures, not read from any real table.
+// Synthetic platform metrics for the dashboard's KPI row, activity panel, and the aggregate signup-trend
+// chart. Numbers are obviously placeholder figures, not read from any real table. Everything here is an
+// AGGREGATE count: no identified individuals, no PII (the dashboard is aggregate-only, README red line).
+
+import type { LucideIcon } from "lucide-react";
+import { Users, ClipboardList, CreditCard, FileText } from "lucide-react";
+
+/** The KPI variant -> brand status token. Generic states only (NOT finance income/expense). */
+export type AdminMetricVariant =
+  | "default"
+  | "success"
+  | "warning"
+  | "critical"
+  | "muted";
 
 /** A single KPI for the dashboard's top row. */
 export interface AdminMetric {
@@ -14,6 +26,12 @@ export interface AdminMetric {
   value: string;
   /** A short qualifier under the value (e.g. "this week"), optional. */
   caption?: string;
+  /** An optional leading icon (rendered in a tinted circle on the card). */
+  icon?: LucideIcon;
+  /** An optional variant -> the tint + accent on the card (a status token, not a finance colour). */
+  variant?: AdminMetricVariant;
+  /** An optional small trend line: a signed percent (e.g. +4.2) and a label (e.g. "vs last week"). */
+  delta?: { value: number; label: string };
 }
 
 /** A single row in the "platform activity" panel. Minimised, non-identifying, synthetic. */
@@ -25,11 +43,50 @@ export interface ActivityItem {
   when: string;
 }
 
+/** A single point in the aggregate signup-trend series. A count for a week, nothing identifying. */
+export interface TrendPoint {
+  /** The week label shown on the x-axis (pre-rendered for the mock). */
+  week: string;
+  /** The aggregate count of signups in that week. */
+  signups: number;
+}
+
 const MOCK_METRICS: AdminMetric[] = [
-  { key: "coordinators", label: "Total Coordinators", value: "1,284", caption: "all time" },
-  { key: "waitlist", label: "Waitlist signups", value: "3,907", caption: "all time" },
-  { key: "subscriptions", label: "Active subscriptions", value: "212", caption: "current" },
-  { key: "content", label: "Content items", value: "48", caption: "published" },
+  {
+    key: "coordinators",
+    label: "Total Coordinators",
+    value: "1,284",
+    caption: "all time",
+    icon: Users,
+    variant: "default",
+    delta: { value: 3.4, label: "vs last week" },
+  },
+  {
+    key: "waitlist",
+    label: "Waitlist signups",
+    value: "3,907",
+    caption: "all time",
+    icon: ClipboardList,
+    variant: "success",
+    delta: { value: 8.1, label: "vs last week" },
+  },
+  {
+    key: "subscriptions",
+    label: "Active subscriptions",
+    value: "212",
+    caption: "current",
+    icon: CreditCard,
+    variant: "warning",
+    delta: { value: -1.2, label: "vs last week" },
+  },
+  {
+    key: "content",
+    label: "Content items",
+    value: "48",
+    caption: "published",
+    icon: FileText,
+    variant: "muted",
+  },
 ];
 
 const MOCK_ACTIVITY: ActivityItem[] = [
@@ -40,6 +97,18 @@ const MOCK_ACTIVITY: ActivityItem[] = [
   { id: "a5", summary: "Account export requested (DSAR)", when: "4 hours ago" },
 ];
 
+// An aggregate 8-week signup trend (synthetic counts). No identities, just a count per week.
+const MOCK_SIGNUP_TREND: TrendPoint[] = [
+  { week: "Apr 21", signups: 186 },
+  { week: "Apr 28", signups: 224 },
+  { week: "May 5", signups: 198 },
+  { week: "May 12", signups: 271 },
+  { week: "May 19", signups: 305 },
+  { week: "May 26", signups: 288 },
+  { week: "Jun 2", signups: 342 },
+  { week: "Jun 9", signups: 397 },
+];
+
 /** Return the synthetic KPI list. */
 export function getMockMetrics(): AdminMetric[] {
   return MOCK_METRICS;
@@ -48,4 +117,9 @@ export function getMockMetrics(): AdminMetric[] {
 /** Return the synthetic activity feed. */
 export function getMockActivity(): ActivityItem[] {
   return MOCK_ACTIVITY;
+}
+
+/** Return the synthetic aggregate signup-trend series (counts per week, no PII). */
+export function getMockSignupTrend(): TrendPoint[] {
+  return MOCK_SIGNUP_TREND;
 }

@@ -18,8 +18,10 @@
 import {
   getMockMetrics,
   getMockActivity,
+  getMockSignupTrend,
   type AdminMetric,
   type ActivityItem,
+  type TrendPoint,
 } from "@/lib/mock/metrics";
 import { getMockUsers, type AdminUserSummary } from "@/lib/mock/users";
 import { getMockContent, type AdminContentItem } from "@/lib/mock/content";
@@ -49,6 +51,16 @@ export const adminApi = {
   async getActivity(): Promise<ActivityItem[]> {
     // SEAM: replace with `await this.#get<ActivityItem[]>("/reporting/activity")`.
     return getMockActivity();
+  },
+
+  /**
+   * The aggregate signup-trend series for the dashboard chart (counts per week). Mock today; an
+   * aggregate, non-identifying reporting RPC tomorrow. Aggregate-only by design: it returns counts,
+   * never identities (the dashboard is aggregate-only, README red line 9).
+   */
+  async getSignupTrend(): Promise<TrendPoint[]> {
+    // SEAM: replace with `await this.#get<TrendPoint[]>("/reporting/signup-trend")`.
+    return getMockSignupTrend();
   },
 
   /** The field-minimised Coordinator list (the E2 support view). Mock today. */

@@ -15,6 +15,7 @@ Mirrors the family app's design system so the two read as one product, with TIWA
 - **Next.js 16 (App Router) + React 19 + TypeScript (strict)**
 - **Tailwind v4 + shadcn/ui** primitives, TIWANI brand tokens in `src/styles/theme.css`
 - **TanStack Query** for server state; **Inter** via `next/font`
+- **Recharts** (token-themed via the chart wrapper) for the dashboard charts; **sonner** for toasts
 - **SSR (not a static export)** + a `middleware` staff-auth gate, so access is gated server-side
 - **Vitest + React Testing Library** for tests
 
@@ -24,9 +25,11 @@ Mirrors the family app's design system so the two read as one product, with TIWA
 - `src/lib/staff-session.ts` - the staff session (a **stub** today; the real gate validates a separate-audience, MFA-asserted staff token, never the family Supabase Auth).
 - `src/lib/rbac.ts` - a default-deny capability allowlist (roles `support_read` / `dsar_handler` / `role_admin`, fail-closed, no single role both reads records and grants access). Decides which affordances to show; real enforcement lives in the future admin-api.
 - `src/lib/admin-api/client.ts` - the single typed client to the future `tiwani-admin-api`. Today it delegates to the mock adapters; when the audited service exists, only this client's bodies change.
-- `src/lib/mock/*` - synthetic, field-minimised data. Obviously fake. Never real PII.
-- `src/components/` - the admin shell, shared brand widgets, and `ui/` primitives.
-- `src/features/*` - feature-first modules (dashboard, auth, users, content, reporting, settings).
+- `src/lib/mock/*` - synthetic, field-minimised data. Obviously fake. Never real PII. The dashboard data (`metrics.ts`) is aggregate-only (counts, no identified individuals).
+- `src/components/ui/*` - the shadcn/Radix primitives, all themed to TIWANI tokens (no off-brand hex): `button`, `card`, `input`, `label`, `field`, `tabs`, `alert`, plus the ported admin-dashboard layer `table` (with a `numeric` right-align prop), `table-pagination`, `badge` (default/secondary/outline/destructive/success/warning), `select`, `tooltip`, `dropdown-menu`, `separator`, and `chart` (the recharts wrapper that injects `--color-<key>` from the `--chart-1..5` token ramp).
+- `src/lib/chart.ts` - the shared chart helpers (the token series ramp, the short animation budget, the grid/axis defaults, the gradient + empty-state helpers). No hardcoded hex; no finance semantics.
+- `src/components/` - the admin shell and the shared brand widgets: `EmptyState` (the reusable no-data state), `DataTable` (the GENERIC, reusable admin table the Users/Content modules build on: a controlled search box, **search-first** mode that requires a query before any row renders per the DPO cross-tenant red line, typed column config, client-side filter + pagination, loading + empty states), and `Toaster` (sonner, themed to the brand surface).
+- `src/features/*` - feature-first modules (dashboard, auth, users, content, reporting, settings). The dashboard is board-ready and aggregate-only: a KPI row (`KpiCard`), an aggregate signup-trend chart (`SignupTrendChart`), and a recent-activity table (`ActivityPanel`).
 
 ## Run it
 
