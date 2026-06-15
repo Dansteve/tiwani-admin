@@ -1,15 +1,7 @@
-import { FileText } from "lucide-react";
+import { ContentScreen } from "@/features/content/ContentScreen";
 
-import { ModulePlaceholder } from "@/components/ModulePlaceholder";
-
-// The Content module placeholder (managing the Strategy Library / governed-copy surface). Wired into the
-// shell so the nav is whole; replaced by the Phase-2 Content screen.
+// The Content module route. The managed platform-content list + the waitlist sub-view, read through the
+// adminApi seam (mock today; an audited admin-api tomorrow). Writes are RBAC-gated inside the screen.
 export default function ContentPage() {
-  return (
-    <ModulePlaceholder
-      title="Content"
-      description="Manage the Strategy Library and governed-copy content. Governed alert copy stays inside its psychiatrist-signed bounds."
-      icon={FileText}
-    />
-  );
+  return <ContentScreen />;
 }
