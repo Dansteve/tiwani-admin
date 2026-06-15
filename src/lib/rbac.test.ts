@@ -31,6 +31,8 @@ const ALL_CAPABILITIES: Capability[] = [
 // The expected grant truth table, written out independently of the implementation so a change to the
 // map must be a deliberate change here too.
 const EXPECTED: Record<StaffRole, Capability[]> = {
+  // super_admin is the bootstrap sole-operator: it holds EVERY capability (see rbac.ts SUPER_ADMIN_EMAIL).
+  super_admin: [...ALL_CAPABILITIES],
   support_read: ["users.read_minimised", "content.read", "reporting.read", "waitlist.read"],
   dsar_handler: [
     "users.read_minimised",
@@ -49,6 +51,11 @@ const EXPECTED: Record<StaffRole, Capability[]> = {
     "roles.manage",
   ],
 };
+
+// The three OPERATIONAL roles, on which strict separation of duties is asserted. super_admin is the
+// deliberate bootstrap exception (it consolidates every duty while the team is one person), so it is
+// excluded here; a separate test pins that super_admin holds everything.
+const OPERATIONAL_ROLES: StaffRole[] = ["support_read", "dsar_handler", "role_admin"];
 
 describe("rbac.can (default-deny allowlist)", () => {
   it("grants exactly the allowlisted capabilities per role, and denies every other", () => {
@@ -76,11 +83,27 @@ describe("rbac.can (default-deny allowlist)", () => {
     expect(can("role_admin", "dsar.handle")).toBe(false);
   });
 
-  it("enforces role separation: no record-reading role can manage staff or roles", () => {
-    // support_read and dsar_handler read records; neither may grant access.
+  it("enforces role separation: no record-reading OPERATIONAL role can manage staff or roles", () => {
+    // support_read and dsar_handler read records; neither may grant access. super_admin is intentionally
+    // EXCLUDED (it is the bootstrap exception, asserted to hold both below), so the strict separation is
+    // pinned only for the operational roles.
     for (const role of ["support_read", "dsar_handler"] as StaffRole[]) {
       expect(can(role, "staff.manage")).toBe(false);
       expect(can(role, "roles.manage")).toBe(false);
+    }
+  });
+
+  it("keeps reads-records and grants-access disjoint across the THREE operational roles", () => {
+    // The security property the map encodes for the operational roles: a role that can read any record
+    // (minimised or full) must NOT also grant access, and vice versa. Pinned over OPERATIONAL_ROLES only;
+    // super_admin is the documented bootstrap exception and is exempt.
+    const READS: Capability[] = ["users.read_minimised", "users.read_full", "dsar.handle"];
+    const GRANTS_ACCESS: Capability[] = ["staff.manage", "roles.manage"];
+    for (const role of OPERATIONAL_ROLES) {
+      const reads = READS.some((c) => can(role, c));
+      const grantsAccess = GRANTS_ACCESS.some((c) => can(role, c));
+      // Never both at once.
+      expect(reads && grantsAccess).toBe(false);
     }
   });
 
@@ -88,10 +111,23 @@ describe("rbac.can (default-deny allowlist)", () => {
     expect(can("support_read", "users.read_minimised")).toBe(true);
     expect(can("support_read", "users.read_full")).toBe(false);
   });
+
+  it("grants super_admin EVERY capability (the bootstrap sole-operator exception)", () => {
+    // super_admin consolidates every duty while the team is one person (rbac.ts SUPER_ADMIN_EMAIL). It is
+    // the ONE role allowed to both read records AND grant access; the accountability controls (reason,
+    // audit-before-data, search-first) still bind it, they just are not expressed in this capability map.
+    for (const capability of ALL_CAPABILITIES) {
+      expect(can("super_admin", capability)).toBe(true);
+    }
+    // Concretely: it both reads records and grants access (the consolidation the other roles forbid).
+    expect(can("super_admin", "users.read_full")).toBe(true);
+    expect(can("super_admin", "roles.manage")).toBe(true);
+  });
 });
 
 describe("rbac.parseRole", () => {
-  it("accepts the three known roles", () => {
+  it("accepts the four known roles", () => {
+    expect(parseRole("super_admin")).toBe("super_admin");
     expect(parseRole("support_read")).toBe("support_read");
     expect(parseRole("dsar_handler")).toBe("dsar_handler");
     expect(parseRole("role_admin")).toBe("role_admin");

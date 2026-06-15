@@ -37,9 +37,9 @@ export function RoleManagementCard({ role }: { role: StaffRole | null }) {
               <AlertTitle>Pre-production stub: no real change</AlertTitle>
               <AlertDescription>
                 <p className="mt-1 text-muted-foreground">
-                  There is no grant store in the back office yet, so these controls are shown for review
-                  but make no change. Role changes become a real, audit-logged action when the admin
-                  service lands.
+                  There is no grant store in Admin yet, so these controls are shown for review but make
+                  no change. Role changes become a real, audit-logged action when the admin service
+                  lands.
                 </p>
               </AlertDescription>
             </Alert>

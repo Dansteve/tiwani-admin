@@ -13,9 +13,9 @@ export function PreProductionBanner() {
       <AlertTitle>Pre-production preview, mock data</AlertTitle>
       <AlertDescription>
         <p className="mt-1 text-warning/90">
-          Every figure here is synthetic. This back office is not connected to real user data. The
-          audited admin service and its access gates (key rotation, DPIA, MFA, audit log, pen test)
-          land before any real data is shown.
+          Every figure here is synthetic. Admin is not connected to real user data. The audited admin
+          service and its access gates (key rotation, DPIA, MFA, audit log, pen test) land before any
+          real data is shown.
         </p>
       </AlertDescription>
     </Alert>

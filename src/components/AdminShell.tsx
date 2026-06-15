@@ -2,9 +2,10 @@
 
 // The admin shell: a desktop sidebar that becomes mobile bottom tabs (mirrors the family app's AppShell
 // + Docs/Brand.md responsiveness rule). Mobile-first: the bottom tab bar is the default, the sidebar
-// appears at lg and up. The header shows the TIWANI Wordmark with a small calm "Back office" qualifier so
-// staff know which surface they are on without it shouting. The five destinations are the FULL set, so
-// the Phase-2 modules (Users / Content / Reporting / Settings) just fill their routes.
+// appears at lg and up. The header shows the TIWANI Wordmark with a small calm "Admin" qualifier so staff
+// know which surface they are on without it shouting (the product UI name is "TIWANI Admin"). The five
+// destinations are the FULL set, so the Phase-2 modules (Users / Content / Reporting / Settings) just fill
+// their routes.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,8 +28,8 @@ const NAV: NavItem[] = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-/** The small calm qualifier under the wordmark, so staff know this is the back office (not shouty). */
-function BackOfficeQualifier({ className }: { className?: string }) {
+/** The small calm qualifier under the wordmark, so staff know this is the Admin surface (not shouty). */
+function AdminQualifier({ className }: { className?: string }) {
   return (
     <span
       className={cn(
@@ -36,7 +37,7 @@ function BackOfficeQualifier({ className }: { className?: string }) {
         className
       )}
     >
-      Back office
+      Admin
     </span>
   );
 }
@@ -49,13 +50,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar (lg and up). */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar px-4 py-6 lg:flex">
         <div className="flex items-center justify-between gap-2 pl-2">
-          <Link href="/" aria-label="TIWANI back office" className="inline-flex items-center gap-2">
+          <Link href="/" aria-label="TIWANI Admin" className="inline-flex items-center gap-2">
             <Wordmark className="text-xl" />
           </Link>
           {/* Quick theme toggle in the shell header; the full selector lives in Settings. */}
           <ThemeToggle variant="icon" />
         </div>
-        <BackOfficeQualifier className="mt-2 self-start" />
+        <AdminQualifier className="mt-2 self-start" />
 
         <nav className="mt-8 flex flex-col gap-1" aria-label="Primary">
           {NAV.map((item) => {
@@ -88,15 +89,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-60">
         <main className="mx-auto w-full max-w-5xl px-4 pb-24 pt-6 lg:pb-10 lg:pt-10">
           {/* Mobile top bar (below lg), STICKY (top-0) so it stays put as the page scrolls. A compact
-              utility bar: the small TIWANI mark (T + dot) links HOME to the dashboard with the "Back
-              office" qualifier; then the theme toggle and the "More" menu (which on mobile carries the
-              sign-out control, since the sidebar foot is desktop-only). Full-bleed (-mx-4 px-4) with an
-              opaque background + a bottom divider so content scrolls cleanly beneath it. The desktop
-              sidebar carries the full mark + nav + sign-out, so this whole bar is lg:hidden. */}
+              utility bar: the small TIWANI mark (T + dot) links HOME to the dashboard with the "Admin"
+              qualifier; then the theme toggle and the "More" menu (which on mobile carries the sign-out
+              control, since the sidebar foot is desktop-only). Full-bleed (-mx-4 px-4) with an opaque
+              background + a bottom divider so content scrolls cleanly beneath it. The desktop sidebar
+              carries the full mark + nav + sign-out, so this whole bar is lg:hidden. */}
           <div className="sticky top-0 z-30 -mx-4 mb-6 flex items-center gap-2 border-b border-border bg-background px-4 py-2.5 lg:hidden">
-            <Link href="/" aria-label="TIWANI back office" className="inline-flex shrink-0 items-center gap-2">
+            <Link href="/" aria-label="TIWANI Admin" className="inline-flex shrink-0 items-center gap-2">
               <Wordmark mark className="text-xl" />
-              <BackOfficeQualifier />
+              <AdminQualifier />
             </Link>
             <div className="ml-auto flex shrink-0 items-center gap-1">
               <ThemeToggle variant="icon" />

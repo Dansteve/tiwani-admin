@@ -17,7 +17,7 @@
 // owner-tracked (admin-track/Backlog.md) and HARD-BLOCK pointing this app at real user data.
 // =============================================================================================
 
-import type { StaffRole } from "@/lib/rbac";
+import { SUPER_ADMIN_EMAIL, type StaffRole } from "@/lib/rbac";
 
 /** The stub session cookie name. Deliberately distinct from any family-app cookie (separate audience). */
 export const STAFF_SESSION_COOKIE = "tiwani_staff_session";
@@ -38,15 +38,18 @@ export interface StaffSession {
 }
 
 /**
- * The single stub staff identity every "sign-in" resolves to. It is obviously synthetic (a demo name,
- * an internal-looking email) so no one mistakes it for a real account. The role is `role_admin` purely so
- * the RBAC scaffold has a concrete role to thread through; real enforcement lands with the admin-api.
+ * The single stub staff identity every "sign-in" resolves to: the bootstrap super admin (the sole platform
+ * operator FOR NOW, SUPER_ADMIN_EMAIL in rbac.ts). The role is `super_admin` so the RBAC scaffold threads a
+ * concrete, full-capability role through the back office while the team is one person. This is STILL a stub
+ * (no password check, no IdP, no MFA, no token validation, as the header note says): it only fixes WHICH
+ * identity the placeholder session represents. Real, MFA-asserted staff identity comes from the separate
+ * staff IdP + the audited admin-api (D16); nothing real until the launch gates clear.
  */
 export const STUB_STAFF: StaffSession = {
-  staffId: "stub-staff-0001",
-  name: "Demo Staff (stub)",
-  email: "demo.staff@tiwani.internal",
-  role: "role_admin",
+  staffId: "stub-super-admin-0001",
+  name: "Dansteve (super admin)",
+  email: SUPER_ADMIN_EMAIL,
+  role: "super_admin",
 };
 
 /**

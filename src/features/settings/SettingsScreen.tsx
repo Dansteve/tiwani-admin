@@ -2,13 +2,14 @@
 
 // The Settings screen: platform settings + RBAC visibility. It composes (top to bottom): the appearance
 // control (the built theme selector), "your account" (the session staff member), the read-only staff list,
-// the capability matrix (RBAC made visible to the board, generated from rbac.ts), role management (gated
-// by can(role, "roles.manage"); a pre-production stub when allowed, view-only otherwise), and the
-// non-sensitive platform-config flags.
+// the capability matrix (RBAC made visible to the board, generated from rbac.ts), the "add / invite staff
+// member" provisioning surface (gated by can(role, "roles.manage"); a pre-production stub), role
+// management (same gate; a stub when allowed, view-only otherwise), and the non-sensitive platform-config
+// flags.
 //
-// The role drives the gates: it comes from the session (the pre-production stub, role_admin today). The
-// matrix is always shown (read-mostly visibility); role management gates its controls on the same can()
-// the admin-api will enforce server-side (D16).
+// The role drives the gates: it comes from the session (the pre-production stub, the bootstrap super_admin
+// today). The matrix is always shown (read-mostly visibility); the provisioning + role-management controls
+// gate on the same can() the admin-api will enforce server-side (D16).
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
@@ -17,6 +18,7 @@ import { STUB_STAFF, type StaffSession } from "@/lib/staff-session";
 import { AccountCard } from "@/features/settings/AccountCard";
 import { StaffListCard } from "@/features/settings/StaffListCard";
 import { CapabilityMatrix } from "@/features/settings/CapabilityMatrix";
+import { AddStaffCard } from "@/features/settings/AddStaffCard";
 import { RoleManagementCard } from "@/features/settings/RoleManagementCard";
 import { PlatformConfigCard } from "@/features/settings/PlatformConfigCard";
 
@@ -39,7 +41,7 @@ export function SettingsScreen({ session = STUB_STAFF }: { session?: StaffSessio
         <CardHeader>
           <CardTitle className="text-lg">Appearance</CardTitle>
           <CardDescription className="text-base">
-            Choose how the back office looks. System follows your device.
+            Choose how Admin looks. System follows your device.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -52,6 +54,8 @@ export function SettingsScreen({ session = STUB_STAFF }: { session?: StaffSessio
       <StaffListCard />
 
       <CapabilityMatrix />
+
+      <AddStaffCard role={session.role} />
 
       <RoleManagementCard role={session.role} />
 

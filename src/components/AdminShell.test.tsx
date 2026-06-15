@@ -1,7 +1,7 @@
 // The AdminShell render test. It pins what the shell guarantees: the five primary destinations are
-// present (in both the desktop sidebar and the mobile bottom bar), the brand Wordmark + the calm "Back
-// office" qualifier show, the active route announces aria-current, every nav icon is aria-hidden with a
-// real text label (accessibility), and NO off-brand hex leaks into the markup (the brand-token rule).
+// present (in both the desktop sidebar and the mobile bottom bar), the brand Wordmark + the calm "Admin"
+// qualifier show, the active route announces aria-current, every nav icon is aria-hidden with a real text
+// label (accessibility), and NO off-brand hex leaks into the markup (the brand-token rule).
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
@@ -51,11 +51,11 @@ function renderShell() {
 }
 
 describe("AdminShell", () => {
-  it("shows the brand wordmark and the calm 'Back office' qualifier", () => {
+  it("shows the brand wordmark and the calm 'Admin' qualifier", () => {
     renderShell();
     // The wordmark renders TIWANI (desktop) and the small mark "T" (mobile bar), so at least one of each.
     expect(screen.getAllByText("TIWANI").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Back office").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Admin").length).toBeGreaterThan(0);
   });
 
   it("renders all five primary destinations in both the sidebar and the bottom bar", () => {

@@ -16,6 +16,7 @@ import { getMockUsers } from "@/lib/mock/users";
 import { getMockContent } from "@/lib/mock/content";
 import { getMockWaitlist } from "@/lib/mock/waitlist";
 import { getMockStaff } from "@/lib/mock/staff";
+import { SUPER_ADMIN_EMAIL } from "@/lib/rbac";
 
 describe("mock/metrics", () => {
   it("returns the four KPI tiles, each with a key, label, and string value", () => {
@@ -73,13 +74,24 @@ describe("mock/metrics", () => {
 });
 
 describe("mock/staff (synthetic, read-only)", () => {
-  it("returns staff members with a known role and an obviously-internal email", () => {
+  it("returns staff members with a known role; the bootstrap super admin first, the rest synthetic", () => {
     const staff = getMockStaff();
     expect(staff.length).toBeGreaterThan(0);
+
+    // The FIRST row is the bootstrap super admin: the founder's real email (intended) + the super_admin
+    // role (rbac.ts SUPER_ADMIN_EMAIL). It is the one row that is not a .internal stub.
+    const first = staff[0];
+    expect(first.role).toBe("super_admin");
+    expect(first.email).toBe(SUPER_ADMIN_EMAIL);
+
     for (const member of staff) {
       expect(typeof member.id).toBe("string");
-      expect(["support_read", "dsar_handler", "role_admin"]).toContain(member.role);
-      // Obviously synthetic: a demo name and an internal (.internal) email, never a real address.
+      expect(["super_admin", "support_read", "dsar_handler", "role_admin"]).toContain(member.role);
+    }
+
+    // Every row OTHER than the bootstrap super admin is obviously synthetic: a "(stub)" demo name and an
+    // internal (.internal) email, never a real address.
+    for (const member of staff.filter((m) => m.email !== SUPER_ADMIN_EMAIL)) {
       expect(member.name).toMatch(/\(stub\)$/);
       expect(member.email).toMatch(/@tiwani\.internal$/);
     }

@@ -17,16 +17,34 @@
 // =============================================================================================
 
 /**
- * The staff roles (admin-track Backlog A0.2). Deliberately separated so no single role both reads
- * sensitive records AND administers access:
+ * The staff roles (admin-track Backlog A0.2). The three operational roles are deliberately separated so
+ * no single one both reads sensitive records AND administers access (strict separation of duties):
  *   - support_read   read-only, field-minimised support views (the least-privilege default).
  *   - dsar_handler   data-rights handling (DSAR / erasure workflows), reason-required + maker-checker.
  *   - role_admin     administers staff + roles; does NOT read sensitive user records.
+ *   - super_admin    the bootstrap platform owner (see SUPER_ADMIN_EMAIL). For now, while TIWANI is a
+ *                    sole-operator, this role CONSOLIDATES every duty (it is the one exception to the
+ *                    separation above). It is a "for now" arrangement, NOT the target end-state.
  */
-export type StaffRole = "support_read" | "dsar_handler" | "role_admin";
+export type StaffRole = "support_read" | "dsar_handler" | "role_admin" | "super_admin";
 
 /** The full set of roles, for iteration / validation. */
-export const STAFF_ROLES: readonly StaffRole[] = ["support_read", "dsar_handler", "role_admin"];
+export const STAFF_ROLES: readonly StaffRole[] = [
+  "super_admin",
+  "support_read",
+  "dsar_handler",
+  "role_admin",
+];
+
+/**
+ * The bootstrap super-admin email: the sole platform operator (the founder) FOR NOW. The `super_admin`
+ * role is granted to this identity while the team is one person, so duties are consolidated rather than
+ * split. This is a pre-production constant: real staff identity comes from the separate staff IdP and the
+ * audited admin-api (D16), and the accountability controls (reason-required, audit-before-data,
+ * search-first) STILL apply to this role. Separating duties across multiple staff is the target once the
+ * team grows, and that split must be reviewed with the DPO before this app ever touches real data.
+ */
+export const SUPER_ADMIN_EMAIL = "dansteveadekanbi@gmail.com";
 
 /**
  * The capabilities a staff action can require. Enumerable and falsifiable (never a vague "advanced"),
@@ -62,8 +80,31 @@ export type Capability =
  *   - role_admin manages staff + roles + content + reads reporting; it does NOT read sensitive user
  *     records (no users.read_full, no users.read_minimised), so "grants access" and "reads records" are
  *     never the same role.
+ *   - super_admin is the bootstrap sole-operator (SUPER_ADMIN_EMAIL): it holds EVERY capability, the one
+ *     deliberate exception to "no role both reads records AND grants access". It exists because the team
+ *     is one person FOR NOW; it does NOT relax the accountability controls. The same default-deny,
+ *     reason-required, audit-before-data, search-first discipline still binds it (a super_admin record
+ *     read is still a reason-bound, logged action, never a standing un-audited population browse). The
+ *     target is to SPLIT these duties across separate staff as the team grows, reviewed with the DPO
+ *     before any real data. A test EXEMPTS super_admin from the disjointness check (and explains why),
+ *     while still asserting the strict separation for the other three.
  */
 const GRANTS: Record<StaffRole, ReadonlySet<Capability>> = {
+  // The bootstrap owner: every capability, consolidated, while TIWANI is sole-operator (see the note
+  // above and SUPER_ADMIN_EMAIL). Enumerated, not a wildcard, so a NEW capability is still denied to it
+  // until deliberately added here too (the fail-closed discipline holds even for super_admin).
+  super_admin: new Set<Capability>([
+    "users.read_minimised",
+    "users.read_full",
+    "content.read",
+    "content.write",
+    "reporting.read",
+    "waitlist.read",
+    "waitlist.manage",
+    "dsar.handle",
+    "staff.manage",
+    "roles.manage",
+  ]),
   support_read: new Set<Capability>([
     "users.read_minimised",
     "content.read",
@@ -90,7 +131,10 @@ const GRANTS: Record<StaffRole, ReadonlySet<Capability>> = {
 
 /** Narrow an arbitrary string to a known role, or null (so an unknown role is treated as no role). */
 export function parseRole(value: string | null | undefined): StaffRole | null {
-  return value === "support_read" || value === "dsar_handler" || value === "role_admin"
+  return value === "support_read" ||
+    value === "dsar_handler" ||
+    value === "role_admin" ||
+    value === "super_admin"
     ? value
     : null;
 }

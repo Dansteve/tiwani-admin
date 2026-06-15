@@ -21,14 +21,15 @@ import { StatusBadge, PlanBadge } from "@/features/users/userBadges";
 // never the sensitive record. A row opens the minimised detail surface, from which the full record is a
 // separate, higher-privilege, reason-required, separately-logged reveal (UserDetailDialog).
 //
-// The previewed role: the real role comes from the (stub) staff session. STUB_STAFF.role is role_admin,
-// which by design cannot read records at all, so for the demo the screen starts the preview at the
-// least-privilege SUPPORT role (support_read) and the board can switch to dsar_handler to watch the reveal
-// affordance appear. The switch is a clearly-labelled pre-production stub (RolePreview), not a real grant.
+// The previewed role: the real role comes from the (stub) staff session. STUB_STAFF.role is super_admin
+// (the bootstrap owner), which is not one of the two operational record-reading roles this support demo
+// wants to contrast, so the screen starts the preview at the least-privilege SUPPORT role (support_read)
+// and the board can switch to dsar_handler to watch the reveal affordance appear. The switch is a
+// clearly-labelled pre-production stub (RolePreview), not a real grant.
 
 /** The role the preview starts on: a record-reading support role, so the support view is usable to demo. */
 function initialPreviewRole(): StaffRole {
-  // If the stub session already carries a record-reading role, honour it; otherwise default to the
+  // If the stub session already carries the data-rights role, honour it; otherwise default to the
   // least-privilege support role so the minimised list is visible for review.
   return STUB_STAFF.role === "dsar_handler" ? "dsar_handler" : "support_read";
 }

@@ -12,9 +12,10 @@ type BadgeVariant = NonNullable<ComponentProps<typeof Badge>["variant"]>;
 
 /** A role's human label + the Badge variant it renders with (brand-token variants only). */
 export const ROLE_DISPLAY: Record<StaffRole, { label: string; variant: BadgeVariant }> = {
+  super_admin: { label: "Super admin", variant: "default" },
   support_read: { label: "Support (read-only)", variant: "secondary" },
   dsar_handler: { label: "Rights handler", variant: "warning" },
-  role_admin: { label: "Role admin", variant: "default" },
+  role_admin: { label: "Role admin", variant: "outline" },
 };
 
 /**

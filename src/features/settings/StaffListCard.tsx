@@ -66,7 +66,7 @@ export function StaffListCard() {
         ) : (
           <EmptyState
             title="No staff yet"
-            description="Staff members will appear here once the back office has accounts."
+            description="Staff members will appear here once Admin has accounts."
           />
         )}
       </CardContent>

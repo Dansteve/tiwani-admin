@@ -22,6 +22,7 @@ import {
 
 /** Friendly labels for the role options (the raw role keys are shown too, so the mapping is explicit). */
 const ROLE_LABEL: Record<StaffRole, string> = {
+  super_admin: "super_admin (bootstrap owner, all access)",
   support_read: "support_read (read-only support)",
   dsar_handler: "dsar_handler (data-rights, can reveal)",
   role_admin: "role_admin (access admin, no record reads)",

@@ -1,6 +1,6 @@
 # tiwani-admin
 
-The TIWANI staff back office (internal admin). A separate, hardened, least-privilege surface for the small team to manage core platform operations: content, users (support views), platform settings, and basic reporting.
+**TIWANI Admin** (the product UI name; "back office" is the descriptive role). A separate, hardened, least-privilege surface for the small team to manage core platform operations: content, users (support views), platform settings, and basic reporting. The repo and code names stay `tiwani-admin`.
 
 > **Status: pre-production foundation.** Everything renders against a clearly-labeled **mock data layer** (`src/lib/mock/*`). There is **no connection to real user data**, no Supabase service-role key, and no family-auth session in this app. Pointing the admin at real data is **hard-gated** behind the launch gates below (`governance/Docs/Decisions.md` D16).
 
@@ -23,7 +23,7 @@ Mirrors the family app's design system so the two read as one product, with TIWA
 
 - `src/middleware.ts` - the server-side staff-auth gate. Every route redirects to `/login` without a staff session. This is the reason the app is SSR, not static: no privileged surface ships to an unauthenticated browser.
 - `src/lib/staff-session.ts` - the staff session (a **stub** today; the real gate validates a separate-audience, MFA-asserted staff token, never the family Supabase Auth).
-- `src/lib/rbac.ts` - a default-deny capability allowlist (roles `support_read` / `dsar_handler` / `role_admin`, fail-closed, no single role both reads records and grants access). Decides which affordances to show; real enforcement lives in the future admin-api.
+- `src/lib/rbac.ts` - a default-deny capability allowlist (roles `support_read` / `dsar_handler` / `role_admin`, fail-closed, no single role both reads records and grants access; plus `super_admin`, the bootstrap sole-operator that consolidates every duty for now, the one deliberate exception, with the accountability controls still binding it). Decides which affordances to show; real enforcement lives in the future admin-api. The bootstrap super admin is `dansteveadekanbi@gmail.com` (`SUPER_ADMIN_EMAIL`). How staff are added is documented in [docs/STAFF.md](docs/STAFF.md): staff are provisioned (invited by email + a role), never self-register.
 - `src/lib/admin-api/client.ts` - the single typed client to the future `tiwani-admin-api`. Today it delegates to the mock adapters; when the audited service exists, only this client's bodies change.
 - `src/lib/mock/*` - synthetic, field-minimised data. Obviously fake. Never real PII. The dashboard data (`metrics.ts`) is aggregate-only (counts, no identified individuals).
 - `src/components/ui/*` - the shadcn/Radix primitives, all themed to TIWANI tokens (no off-brand hex): `button`, `card`, `input`, `label`, `field`, `tabs`, `alert`, plus the ported admin-dashboard layer `table` (with a `numeric` right-align prop), `table-pagination`, `badge` (default/secondary/outline/destructive/success/warning), `select`, `tooltip`, `dropdown-menu`, `separator`, and `chart` (the recharts wrapper that injects `--color-<key>` from the `--chart-1..5` token ramp).

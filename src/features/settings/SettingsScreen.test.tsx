@@ -1,12 +1,17 @@
 // The settings screen test. It pins: (1) the account card shows the session staff member; (2) the
 // read-only staff list renders the mock rows with role Badges; (3) the capability matrix matches rbac.ts
 // EXACTLY (every rendered cell equals can(role, capability), the load-bearing assertion that the visible
-// RBAC cannot drift from the real allowlist); (4) role management is gated by can(role, "roles.manage")
-// both ways; and (5) the RED LINE: no audit-logging / reason-requirement / maker-checker toggle exists.
+// RBAC cannot drift from the real allowlist); (4) role management AND the add/invite-staff provisioning
+// form are gated by can(role, "roles.manage") both ways; and (5) the RED LINE: no audit-logging /
+// reason-requirement / maker-checker toggle exists.
 
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// AddStaffCard imports the toast entry point; the screen mounts it, so stub it to a no-op spy (the toast
+// would otherwise mount sonner under jsdom). Same pattern the content module tests use.
+vi.mock("@/lib/toast", () => ({ toast: { message: vi.fn(), success: vi.fn(), error: vi.fn() } }));
 
 import { SettingsScreen } from "@/features/settings/SettingsScreen";
 import { ThemeProvider } from "@/state/ThemeProvider";
@@ -129,6 +134,40 @@ describe("SettingsScreen role-management gating", () => {
     expect(screen.getByText("View only")).toBeInTheDocument();
     expect(screen.getByText(/cannot manage staff roles/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /assign role/i })).toBeNull();
+  });
+});
+
+describe("SettingsScreen add/invite-staff provisioning gating", () => {
+  it("shows the add-staff form (email + role + submit) when the role can manage roles (role_admin)", () => {
+    renderSettings(makeSession("role_admin"));
+    expect(can("role_admin", "roles.manage")).toBe(true);
+    // The provisioning affordance: the section header, the email input, the role select, the submit.
+    expect(screen.getByText(/Add \/ invite staff member/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /send invite/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/work email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/role for the new staff member/i)).toBeInTheDocument();
+  });
+
+  it("also shows the add-staff form for super_admin (it holds roles.manage)", () => {
+    renderSettings(makeSession("super_admin"));
+    expect(can("super_admin", "roles.manage")).toBe(true);
+    expect(screen.getByRole("button", { name: /send invite/i })).toBeInTheDocument();
+  });
+
+  it("hides the add-staff form for a role without roles.manage (support_read)", () => {
+    renderSettings(makeSession("support_read"));
+    expect(can("support_read", "roles.manage")).toBe(false);
+    // No form: no submit button, no email field, no role select. Just the view-only notice.
+    expect(screen.queryByRole("button", { name: /send invite/i })).toBeNull();
+    expect(screen.queryByLabelText(/work email/i)).toBeNull();
+    expect(screen.queryByLabelText(/role for the new staff member/i)).toBeNull();
+    expect(screen.getByText(/cannot invite staff/i)).toBeInTheDocument();
+  });
+
+  it("hides the add-staff form for dsar_handler too (it reads records, does not grant access)", () => {
+    renderSettings(makeSession("dsar_handler"));
+    expect(can("dsar_handler", "roles.manage")).toBe(false);
+    expect(screen.queryByRole("button", { name: /send invite/i })).toBeNull();
   });
 });
 

@@ -5,7 +5,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { StaffSignInForm } from "@/features/auth/StaffSignInForm";
 
 export const metadata: Metadata = {
-  title: "Sign in - TIWANI Back Office",
+  title: "Sign in - TIWANI Admin",
   robots: { index: false, follow: false },
 };
 
@@ -20,7 +20,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center gap-2">
           <Wordmark className="text-2xl" />
           <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-            Back office
+            Admin
           </span>
         </div>
 

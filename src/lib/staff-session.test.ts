@@ -11,6 +11,7 @@ import {
   encodeStaffSession,
   decodeStaffSession,
 } from "@/lib/staff-session";
+import { SUPER_ADMIN_EMAIL } from "@/lib/rbac";
 
 describe("staff-session", () => {
   it("uses a cookie name distinct from the family app (a separate auth audience)", () => {
@@ -38,8 +39,11 @@ describe("staff-session", () => {
     expect(decodeStaffSession(partial)).toBeNull();
   });
 
-  it("ships an obviously synthetic stub identity (not a real account)", () => {
-    expect(STUB_STAFF.email).toMatch(/\.internal$/);
-    expect(STUB_STAFF.name).toMatch(/stub/i);
+  it("ships the bootstrap super-admin identity (the sole operator, for now)", () => {
+    // The stub is no longer a generic demo row: it is the bootstrap super admin (rbac.ts SUPER_ADMIN_EMAIL).
+    // It is STILL a placeholder session (no real auth); this only pins WHICH identity it stands in for.
+    expect(STUB_STAFF.role).toBe("super_admin");
+    expect(STUB_STAFF.email).toBe(SUPER_ADMIN_EMAIL);
+    expect(STUB_STAFF.name).toMatch(/super admin/i);
   });
 });

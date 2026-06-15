@@ -2,11 +2,13 @@
 // behind the launch gates (key rotation, DPIA, RBAC + MFA + audit log, pen test).
 //
 // Synthetic staff members for the Settings "staff list" (a read-only view). The real list comes from the
-// staff_member table resolved by the admin-api; this is the obviously-fake stand-in so the screen and the
-// role Badges render end-to-end. Internal-looking .internal emails (same convention as STUB_STAFF) and
-// demo names, so no one mistakes a row for a real account. Roles come from the rbac.ts StaffRole set.
+// staff_member table resolved by the admin-api; this is the stand-in so the screen and the role Badges
+// render end-to-end. The FIRST row is the bootstrap super admin (SUPER_ADMIN_EMAIL, the founder's real
+// address, intended): it is the sole operator for now. Every OTHER row is obviously synthetic (a demo name
+// + an internal .internal email, the same convention as STUB_STAFF) so no one mistakes it for a real
+// account. Roles come from the rbac.ts StaffRole set.
 
-import type { StaffRole } from "@/lib/rbac";
+import { SUPER_ADMIN_EMAIL, type StaffRole } from "@/lib/rbac";
 
 /** A single synthetic staff member (the read-only Settings list). */
 export interface StaffMember {
@@ -20,6 +22,12 @@ export interface StaffMember {
 }
 
 const MOCK_STAFF: StaffMember[] = [
+  {
+    id: "staff-super-0001",
+    name: "Dansteve (super admin)",
+    email: SUPER_ADMIN_EMAIL,
+    role: "super_admin",
+  },
   {
     id: "staff-0001",
     name: "Demo Admin (stub)",

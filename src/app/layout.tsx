@@ -14,9 +14,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TIWANI Back Office",
+  title: "TIWANI Admin",
   description:
-    "Internal staff back office for TIWANI. Pre-production, mock data only (Decisions.md D16).",
+    "Internal staff admin for TIWANI. Pre-production, mock data only (Decisions.md D16).",
   // Staff tooling must never be indexed.
   robots: { index: false, follow: false },
 };
