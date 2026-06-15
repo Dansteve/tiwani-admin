@@ -125,7 +125,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px]",
+                "flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-xs",
                 active ? "text-primary font-medium" : "text-muted-foreground"
               )}
             >
