@@ -23,9 +23,34 @@ import {
   type ActivityItem,
   type TrendPoint,
 } from "@/lib/mock/metrics";
-import { getMockUsers, type AdminUserSummary } from "@/lib/mock/users";
+import {
+  getMockUsers,
+  getMockUserDetail,
+  getMockUserFullRecord,
+  getMockContextNote,
+  type AdminUserSummary,
+  type AdminUserFullRecord,
+} from "@/lib/mock/users";
 import { getMockContent, type AdminContentItem } from "@/lib/mock/content";
 import { getMockWaitlist, type WaitlistEntry } from "@/lib/mock/waitlist";
+
+/**
+ * A privileged-read audit event. In the real admin-api EVERY privileged read writes one of these to the
+ * tamper-evident, append-only audit log BEFORE the data is returned (Decisions.md D16). The `reason`
+ * (a ticket reference / free-text justification) is the accountability affordance that replaces the
+ * family product's RLS for cross-tenant staff access. Modeled minimally here; the server owns the canonical
+ * shape (staff id, role, action, target, reason, timestamp, request hash).
+ */
+export interface AdminAuditEvent {
+  /** The audited action, e.g. "users.read_full" or "users.read_context_note". */
+  action: string;
+  /** The acting staff role (from the validated staff session in production; the stub role here). */
+  role: string;
+  /** The target record id the read concerns. */
+  targetId: string;
+  /** The mandatory reason / ticket reference. Never empty (the UI blocks an empty reason). */
+  reason: string;
+}
 
 /** The audited admin-api base URL (unset in dev -> the client stays on the mocks). */
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL ?? "";
@@ -67,6 +92,61 @@ export const adminApi = {
   async getUsers(): Promise<AdminUserSummary[]> {
     // SEAM: replace with `await this.#get<AdminUserSummary[]>("/users")` (reason-required, logged).
     return getMockUsers();
+  },
+
+  /**
+   * A single Coordinator's MINIMISED detail (the default detail surface, NOT the sensitive record). Mock
+   * today; a minimised, logged read tomorrow. Returns null for an unknown id.
+   */
+  async getUser(id: string): Promise<AdminUserSummary | null> {
+    // SEAM: replace with `await this.#get<AdminUserSummary>("/users/" + id)` (minimised, logged).
+    return getMockUserDetail(id);
+  },
+
+  /**
+   * The FULL sensitive record (the higher-privilege reveal). Reason-required: a caller passes the
+   * mandatory ticket/justification, which in production the admin-api logs to the append-only audit log
+   * BEFORE returning the record. Here the data is synthetic and the audit write is the separate
+   * recordAudit() call the screen makes first; this method also guards an empty reason as a belt-and-braces
+   * check so the seam never returns the record without one. Returns null for an unknown id.
+   */
+  async getUserFullRecord(
+    id: string,
+    reason: string,
+  ): Promise<AdminUserFullRecord | null> {
+    // SEAM: replace with a reason-required, audit-logged POST `/users/{id}/full-record` to the admin-api,
+    // which writes the audit row server-side BEFORE returning. The reason travels in the request body.
+    if (!reason.trim()) {
+      throw new Error("A reason is required to reveal the full record.");
+    }
+    return getMockUserFullRecord(id);
+  },
+
+  /**
+   * The synthetic context-note BODY (the separate, further-gated reveal). A DISTINCT method from
+   * getUserFullRecord so the note text cannot ride along with the record: viewing it is its own
+   * reason-required, separately-logged action. Returns null when there is no note. Guards an empty reason.
+   */
+  async getContextNote(id: string, reason: string): Promise<string | null> {
+    // SEAM: replace with a reason-required, audit-logged POST `/users/{id}/context-note` to the admin-api,
+    // which writes its OWN audit row server-side BEFORE returning the note body.
+    if (!reason.trim()) {
+      throw new Error("A reason is required to view the context note.");
+    }
+    return getMockContextNote(id);
+  },
+
+  /**
+   * Record a privileged-read audit event. In production this is the append-only audit-log write the
+   * admin-api performs BEFORE any privileged read resolves; the screen calls it FIRST, then fetches, so the
+   * audit-before-data ordering holds even in the stub. Today it is a stub that surfaces the event (a toast,
+   * wired by the caller) and resolves; it never returns data. Replaced by the real audited write.
+   */
+  async recordAudit(event: AdminAuditEvent): Promise<void> {
+    // SEAM: replace with `await this.#post("/audit", event)` against the append-only audit log. The real
+    // privileged reads write their audit row server-side; this client-side call is the pre-production
+    // stand-in that proves the ordering and shows the staff member what was logged.
+    void event;
   },
 
   /** The managed-content list (the Content module). Mock today. */
